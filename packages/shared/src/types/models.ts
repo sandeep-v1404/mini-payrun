@@ -1,35 +1,38 @@
-export interface Employee {
+export type Employee = {
   id: string;
   firstName: string;
   lastName: string;
   type: "hourly";
   baseHourlyRate: number;
   superRate: number;
-  bank?: { bsb: string; account: string };
-}
+  bank?: {
+    bsb?: string;
+    account?: string;
+  };
+};
 
-export interface TimesheetEntry {
-  date: string;
-  start: string;
-  end: string;
+export type TimesheetEntry = {
+  date: string; // ISO date
+  start: string; // "HH:mm"
+  end: string; // "HH:mm"
   unpaidBreakMins: number;
-}
+};
 
-export interface Timesheet {
+export type Timesheet = {
   employeeId: string;
-  periodStart: string;
-  periodEnd: string;
+  periodStart: string; // ISO date
+  periodEnd: string; // ISO date
   entries: TimesheetEntry[];
   allowances?: number;
-}
+};
 
-export interface PayrunRequest {
+export type PayrunRequest = {
   periodStart: string;
   periodEnd: string;
   employeeIds?: string[];
-}
+};
 
-export interface Payslip {
+export type Payslip = {
   employeeId: string;
   normalHours: number;
   overtimeHours: number;
@@ -37,12 +40,17 @@ export interface Payslip {
   tax: number;
   super: number;
   net: number;
-}
+};
 
-export interface Payrun {
+export type Payrun = {
   id: string;
   periodStart: string;
   periodEnd: string;
-  totals: { gross: number; tax: number; super: number; net: number };
+  totals: {
+    gross: number;
+    tax: number;
+    super: number;
+    net: number;
+  };
   payslips: Payslip[];
-}
+};
