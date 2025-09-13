@@ -1,0 +1,27 @@
+{
+  "name": "mini-payrun-assignment",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "api:dev": "pnpm --filter @mini-payrun/api dev",
+    "api:test": "pnpm --filter @mini-payrun/api test",
+    "api:lint": "pnpm --filter @mini-payrun/api lint",
+    "api:typecheck": "pnpm --filter @mini-payrun/api typecheck",
+    "web:dev": "pnpm --filter @mini-payrun/web dev",
+    "web:build": "pnpm --filter @mini-payrun/web build",
+    "dev": "concurrently \"pnpm api:dev\" \"pnpm web:dev\"",
+    "build": "tsc -b"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.14.0",
+  "devDependencies": {
+    "concurrently": "^8.0.0",
+    "typescript": "^5.9.2"
+  },
+  "dependencies": {
+    "mini-payrun-assignment": "link:"
+  }
+}
