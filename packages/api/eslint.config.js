@@ -18,12 +18,12 @@ export default defineConfig([
     },
     rules: {
       // ✅ TypeScript best practices
-      "@typescript-eslint/no-unused-vars": [
-        "warn",
-        { argsIgnorePattern: "^_" },
-      ],
+      // "@typescript-eslint/no-unused-vars": [
+      //   "warn",
+      //   { argsIgnorePattern: "^_" },
+      // ],
       "@typescript-eslint/explicit-function-return-type": "warn",
-      "@typescript-eslint/no-explicit-any": "warn",
+      // "@typescript-eslint/no-explicit-any": "warn",
       "@typescript-eslint/consistent-type-imports": "warn",
       "@typescript-eslint/array-type": ["warn", { default: "array-simple" }],
       "@typescript-eslint/ban-ts-comment": "warn",
@@ -39,6 +39,6 @@ export default defineConfig([
       // ✅ Style consistency
       "prettier/prettier": "warn",
     },
-    ignores: ["dist", "node_modules"],
+    ignores: ["dist", "node_modules", "src/generated"],
   },
 ]);

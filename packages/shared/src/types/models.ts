@@ -2,7 +2,7 @@ export type Employee = {
   id: string;
   firstName: string;
   lastName: string;
-  type: "hourly";
+  type: string;
   baseHourlyRate: number;
   superRate: number;
   bank?: {

@@ -1,0 +1,49 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Employee {
+  id             String      @id @default(uuid())
+  firstName      String
+  lastName       String
+  type           String // "hourly" currently
+  baseHourlyRate Float
+  superRate      Float
+  bank           Json? // Optional bank details { bsb, account }
+  timesheets     Timesheet[]
+}
+
+model Timesheet {
+  id          String   @id @default(uuid())
+  employee    Employee @relation(fields: [employeeId], references: [id])
+  employeeId  String
+  periodStart DateTime
+  periodEnd   DateTime
+  entries     Json // TimesheetEntry[]
+  allowances  Float? // optional
+  payrun      Payrun?  @relation(fields: [payrunId], references: [id])
+  payrunId    String?
+
+  @@unique([employeeId, periodStart, periodEnd]) // ensure unique per employee + period
+}
+
+model Payrun {
+  id          String      @id @default(uuid())
+  periodStart DateTime
+  periodEnd   DateTime
+  totals      Json // { gross, tax, super, net }
+  payslips    Json // Payslip[]
+  timesheets  Timesheet[]
+}

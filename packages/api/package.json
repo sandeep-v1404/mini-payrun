@@ -5,10 +5,15 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "tsx watch  --env-file=.env src/index.ts",
     "test": "jest",
     "lint": "eslint . --ext .ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prisma:generate": "pnpm prisma generate",
+    "prisma:migrate": "pnpm prisma migrate dev",
+    "prisma:studio": "pnpm prisma studio",
+    "prisma:reset": "pnpm prisma migrate reset",
+    "prisma:push": "pnpm prisma db push"
   },
   "keywords": [],
   "author": "",
@@ -16,6 +21,7 @@
   "packageManager": "pnpm@10.14.0",
   "dependencies": {
     "@mini-payrun/shared": "workspace:*",
+    "@prisma/client": "^6.16.1",
     "eslint-plugin-prettier": "^5.5.4",
     "express": "^5.1.0",
     "typescript-eslint": "^8.43.0",
@@ -29,6 +35,7 @@
     "eslint": "^9.35.0",
     "jest": "^30.1.3",
     "nodemon": "^3.1.10",
+    "prisma": "^6.16.1",
     "ts-node": "^10.9.2",
     "tsx": "^4.20.5",
     "typescript": "^5.9.2"
