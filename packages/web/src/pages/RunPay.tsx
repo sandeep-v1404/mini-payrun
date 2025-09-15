@@ -1,57 +1,213 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api } from "../api/client";
+import type { Payrun } from "@mini-payrun/shared";
+import React, { useState } from "react";
+import Card from "@/components/Card";
+import Field from "@/components/Field";
+import Input from "@/components/Input";
+import Button from "@/components/Button";
+import { Calculator } from "lucide-react";
 
-type Payrun = {
-  id: string;
-  periodStart: string;
-  periodEnd: string;
-  totals: {
-    gross: number;
-    tax: number;
-    super: number;
-    net: number;
+const RunPay = ({ loading, employees, setLoading, apiClient, loadData }) => {
+  const [periodStart, setPeriodStart] = useState("2025-08-11");
+  const [periodEnd, setPeriodEnd] = useState("2025-08-17");
+  const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
+  const [payrunResult, setPayrunResult] = useState<Payrun | null>(null);
+
+  const handleEmployeeToggle = (employeeId: string) => {
+    setSelectedEmployees((prev) =>
+      prev.includes(employeeId)
+        ? prev.filter((id) => id !== employeeId)
+        : [...prev, employeeId]
+    );
   };
-};
 
-export default function Payruns() {
-  const queryClient = useQueryClient();
+  const handleSelectAll = () => {
+    setSelectedEmployees(
+      selectedEmployees.length === employees.length
+        ? []
+        : employees.map((emp) => emp.id)
+    );
+  };
 
-  const { data: payruns, isLoading } = useQuery({
-    queryKey: ["payruns"],
-    queryFn: async () => {
-      const res = await api.get<Payrun[]>("/payruns");
-      return res.data;
-    },
-  });
+  const handleRunPayrun = async (e: any) => {
+    e?.preventDefault();
+    setLoading(true);
+    try {
+      const payrunData = {
+        periodStart,
+        periodEnd,
+        employeeIds:
+          selectedEmployees.length > 0 ? selectedEmployees : undefined,
+      };
 
-  const createPayrun = useMutation({
-    mutationFn: () =>
-      api.post("/payruns", {
-        periodStart: "2025-09-01",
-        periodEnd: "2025-09-15",
-      }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["payruns"] }),
-  });
-
-  if (isLoading) return <p>Loading...</p>;
+      const result = await apiClient.post("/payruns", payrunData);
+      setPayrunResult(result);
+      await loadData(); // Refresh payruns list
+    } catch (error) {
+      console.error("Failed to run payrun:", error);
+      alert("Failed to run payrun");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div>
-      <h1 className="text-xl font-bold mb-2">Payruns</h1>
-      <button
-        onClick={() => createPayrun.mutate()}
-        className="bg-green-500 text-white px-3 py-1 mb-3"
-      >
-        Generate Payrun
-      </button>
+    <div className="space-y-8">
+      {/* <div>
+        <h1 className="text-3xl font-bold text-gray-900">Run Payrun</h1>
+        <p className="text-gray-600 mt-2">
+          Generate payroll for selected period
+        </p>
+      </div> */}
 
-      <ul>
-        {payruns?.map((p) => (
-          <li key={p.id}>
-            {p.periodStart} → {p.periodEnd} | Net: {p.totals.net}
-          </li>
-        ))}
-      </ul>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <Card
+          title="Payrun Parameters"
+          className="border-l-4 border-l-purple-500"
+        >
+          <form className="space-y-6" onSubmit={handleRunPayrun}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Field label="Period Start" required>
+                <Input
+                  type="date"
+                  value={periodStart}
+                  onChange={(e) => setPeriodStart(e.target.value)}
+                  required
+                />
+              </Field>
+
+              <Field label="Period End" required>
+                <Input
+                  type="date"
+                  value={periodEnd}
+                  onChange={(e) => setPeriodEnd(e.target.value)}
+                  required
+                />
+              </Field>
+            </div>
+
+            <Field label="Select Employees">
+              <div className="space-y-3">
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="select-all"
+                    checked={selectedEmployees.length === employees.length}
+                    onChange={handleSelectAll}
+                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  <label
+                    htmlFor="select-all"
+                    className="ml-2 text-sm font-medium text-gray-700"
+                  >
+                    Select All ({employees.length})
+                  </label>
+                </div>
+
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {employees.map((emp) => (
+                    <div key={emp.id} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id={emp.id}
+                        checked={selectedEmployees.includes(emp.id)}
+                        onChange={() => handleEmployeeToggle(emp.id)}
+                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      />
+                      <label
+                        htmlFor={emp.id}
+                        className="ml-2 text-sm text-gray-700"
+                      >
+                        {emp.firstName} {emp.lastName} (${emp.baseHourlyRate}
+                        /hr)
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </Field>
+
+            <Button type="submit" disabled={loading} icon={Calculator}>
+              {loading ? "Processing..." : "Run Payrun"}
+            </Button>
+          </form>
+        </Card>
+
+        {payrunResult && (
+          <Card
+            title="Payrun Results"
+            className="border-l-4 border-l-green-500"
+          >
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-green-50 p-4 rounded-lg">
+                  <p className="text-sm text-green-600 font-medium">
+                    Gross Pay
+                  </p>
+                  <p className="text-2xl font-bold text-green-700">
+                    ${payrunResult.totals.gross.toFixed(2)}
+                  </p>
+                </div>
+                <div className="bg-red-50 p-4 rounded-lg">
+                  <p className="text-sm text-red-600 font-medium">Total Tax</p>
+                  <p className="text-2xl font-bold text-red-700">
+                    ${payrunResult.totals.tax.toFixed(2)}
+                  </p>
+                </div>
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <p className="text-sm text-blue-600 font-medium">Super</p>
+                  <p className="text-2xl font-bold text-blue-700">
+                    ${payrunResult.totals.super.toFixed(2)}
+                  </p>
+                </div>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <p className="text-sm text-gray-600 font-medium">Net Pay</p>
+                  <p className="text-2xl font-bold text-gray-700">
+                    ${payrunResult.totals.net.toFixed(2)}
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-3">
+                  Employee Breakdown
+                </h4>
+                <div className="space-y-2">
+                  {payrunResult.payslips.map((payslip) => {
+                    const employee = employees.find(
+                      (emp) => emp.id === payslip.employeeId
+                    );
+                    return (
+                      <div
+                        key={payslip.employeeId}
+                        className="flex justify-between items-center p-3 bg-gray-50 rounded-lg"
+                      >
+                        <div>
+                          <p className="font-medium text-gray-900">
+                            {employee
+                              ? `${employee.firstName} ${employee.lastName}`
+                              : payslip.employeeId}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            {payslip.normalHours}h + {payslip.overtimeHours}h OT
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-semibold text-green-600">
+                            ${payslip.net.toFixed(2)}
+                          </p>
+                          <p className="text-sm text-gray-600">net</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </Card>
+        )}
+      </div>
     </div>
   );
-}
+};
+
+export default RunPay;

@@ -1,206 +1,249 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api } from "../api/client";
-import { useState } from "react";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
-type TimesheetEntry = {
-  date: string;
-  start: string;
-  end: string;
-  unpaidBreakMins: number;
-};
+import Button from "@/components/Button";
+import Card from "@/components/Card";
+import Field from "@/components/Field";
+import Input from "@/components/Input";
+import Select from "@/components/Select";
+import type { TimesheetEntry } from "@mini-payrun/shared";
+import { Plus } from "lucide-react";
+import React, { useState } from "react";
 
-type Timesheet = {
-  employeeId: string;
-  periodStart: string;
-  periodEnd: string;
-  entries: TimesheetEntry[];
-  allowances?: number;
-};
+const TimesheetsView = ({ apiClient, employees, loading, setLoading }) => {
+  const [selectedEmployee, setSelectedEmployee] = useState("");
+  const [periodStart, setPeriodStart] = useState("2025-08-11");
+  const [periodEnd, setPeriodEnd] = useState("2025-08-17");
+  const [entries, setEntries] = useState<TimesheetEntry[]>([
+    { date: "2025-08-11", start: "09:00", end: "17:30", unpaidBreakMins: 30 },
+  ]);
+  const [allowances, setAllowances] = useState("0");
 
-type Employee = {
-  id: string;
-  firstName: string;
-  lastName: string;
-};
+  const addEntry = () => {
+    const nextDate = new Date(entries[entries.length - 1]?.date || periodStart);
+    nextDate.setDate(nextDate.getDate() + 1);
 
-const getEmployees = async () => {
-  const res = await api.get<Employee[]>("/employees");
-  return res.data;
-};
+    setEntries([
+      ...entries,
+      {
+        date: nextDate.toISOString().split("T")[0],
+        start: "09:00",
+        end: "17:30",
+        unpaidBreakMins: 30,
+      },
+    ]);
+  };
 
-const getTimesheets = async () => {
-  const res = await api.get<Timesheet[]>("/timesheets");
-  return res.data;
-};
+  const updateEntry = (
+    index: number,
+    field: keyof TimesheetEntry,
+    value: any
+  ) => {
+    const updatedEntries = [...entries];
+    updatedEntries[index] = { ...updatedEntries[index], [field]: value };
+    setEntries(updatedEntries);
+  };
 
-export default function Timesheets() {
-  const queryClient = useQueryClient();
-  const [form, setForm] = useState<Partial<Timesheet>>({
-    employeeId: "",
-    periodStart: "",
-    periodEnd: "",
-    allowances: 0,
-    entries: [],
-  });
-  const [entry, setEntry] = useState<Partial<TimesheetEntry>>({});
+  const removeEntry = (index: number) => {
+    if (entries.length > 1) {
+      setEntries(entries.filter((_, i) => i !== index));
+    }
+  };
 
-  // ✅ React Query v5 style
-  const { data: employees } = useQuery({
-    queryKey: ["employees"],
-    queryFn: getEmployees,
-  });
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedEmployee) return;
 
-  const { data: timesheets, isLoading } = useQuery({
-    queryKey: ["timesheets"],
-    queryFn: getTimesheets,
-  });
+    setLoading(true);
+    try {
+      const timesheetData = {
+        employeeId: selectedEmployee,
+        periodStart,
+        periodEnd,
+        entries,
+        allowances: parseFloat(allowances),
+      };
 
-  const saveTimesheet = useMutation({
-    mutationFn: (ts: Timesheet) => api.post("/timesheets", ts),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["timesheets"] });
-    },
-  });
+      await apiClient.post("/timesheets", timesheetData);
+      // Reset form
+      setEntries([
+        {
+          date: periodStart,
+          start: "09:00",
+          end: "17:30",
+          unpaidBreakMins: 30,
+        },
+      ]);
+      setAllowances("0");
+      alert("Timesheet saved successfully!");
+    } catch (error) {
+      console.error("Failed to save timesheet:", error);
+      alert("Failed to save timesheet");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  function addEntryToForm() {
-    if (!entry.date || !entry.start || !entry.end) return;
-    setForm({
-      ...form,
-      entries: [...(form.entries ?? []), entry as TimesheetEntry],
-    });
-    setEntry({});
-  }
-
-  if (isLoading) return <p>Loading...</p>;
+  const calculateHours = (start: string, end: string, breakMins: number) => {
+    const startTime = new Date(`2000-01-01T${start}:00`);
+    const endTime = new Date(`2000-01-01T${end}:00`);
+    const diffMs = endTime.getTime() - startTime.getTime();
+    const totalMins = diffMs / (1000 * 60) - breakMins;
+    return (totalMins / 60).toFixed(2);
+  };
 
   return (
-    <div>
-      <h1 className="text-xl font-bold mb-3">Timesheets</h1>
+    <div className="space-y-8">
+      {/* <div>
+        <h1 className="text-3xl font-bold text-gray-900">Timesheets</h1>
+        <p className="text-gray-600 mt-2">Record employee working hours</p>
+      </div> */}
 
-      {/* Create or Update Timesheet */}
-      <form
-        className="border p-3 mb-5 space-y-2"
-        onSubmit={(e) => {
-          e.preventDefault();
-          saveTimesheet.mutate(form as Timesheet);
-        }}
-      >
-        <h2 className="font-semibold">New / Update Timesheet</h2>
+      <Card title="Create Timesheet" className="border-l-4 border-l-green-500">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 ">
+            <Field label="Employee" required>
+              <Select
+                value={selectedEmployee}
+                onChange={(e) => setSelectedEmployee(e.target.value)}
+              >
+                <option value="">Select employee</option>
+                {employees.map((emp) => (
+                  <option key={emp.id} value={emp.id}>
+                    {emp.firstName} {emp.lastName}
+                  </option>
+                ))}
+              </Select>
+            </Field>
 
-        <select
-          className="border p-1 block"
-          value={form.employeeId}
-          onChange={(e) => setForm({ ...form, employeeId: e.target.value })}
-        >
-          <option value="">Select Employee</option>
-          {employees?.map((e) => (
-            <option key={e.id} value={e.id}>
-              {e.firstName} {e.lastName}
-            </option>
-          ))}
-        </select>
+            <Field label="Period Start" required>
+              <Input
+                type="date"
+                value={periodStart}
+                onChange={(e) => setPeriodStart(e.target.value)}
+                required
+              />
+            </Field>
 
-        <input
-          type="date"
-          className="border p-1 block"
-          value={form.periodStart}
-          onChange={(e) => setForm({ ...form, periodStart: e.target.value })}
-        />
-        <input
-          type="date"
-          className="border p-1 block"
-          value={form.periodEnd}
-          onChange={(e) => setForm({ ...form, periodEnd: e.target.value })}
-        />
-        <input
-          type="number"
-          placeholder="Allowances"
-          className="border p-1 block"
-          value={form.allowances}
-          onChange={(e) =>
-            setForm({ ...form, allowances: parseFloat(e.target.value) })
-          }
-        />
+            <Field label="Period End" required>
+              <Input
+                type="date"
+                value={periodEnd}
+                onChange={(e) => setPeriodEnd(e.target.value)}
+                required
+              />
+            </Field>
+          </div>
 
-        {/* Add Entry inline */}
-        <div className="border p-2">
-          <h3 className="font-medium">Add Entry</h3>
-          <input
-            type="date"
-            className="border p-1"
-            value={entry.date ?? ""}
-            onChange={(e) => setEntry({ ...entry, date: e.target.value })}
-          />
-          <input
-            type="time"
-            className="border p-1"
-            value={entry.start ?? ""}
-            onChange={(e) => setEntry({ ...entry, start: e.target.value })}
-          />
-          <input
-            type="time"
-            className="border p-1"
-            value={entry.end ?? ""}
-            onChange={(e) => setEntry({ ...entry, end: e.target.value })}
-          />
-          <input
-            type="number"
-            placeholder="Break (mins)"
-            className="border p-1 w-28"
-            value={entry.unpaidBreakMins ?? ""}
-            onChange={(e) =>
-              setEntry({
-                ...entry,
-                unpaidBreakMins: parseInt(e.target.value),
-              })
-            }
-          />
-          <button
-            type="button"
-            onClick={addEntryToForm}
-            className="bg-green-500 text-white px-3 py-1 rounded ml-2"
-          >
-            Add Entry
-          </button>
-        </div>
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Time Entries
+              </h3>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={addEntry}
+                icon={Plus}
+              >
+                Add Entry
+              </Button>
+            </div>
 
-        {/* Preview Entries */}
-        <ul className="ml-4 list-disc">
-          {form.entries?.map((en, idx) => (
-            <li key={idx}>
-              {en.date}: {en.start} - {en.end} (Break {en.unpaidBreakMins}m)
-            </li>
-          ))}
-        </ul>
+            <div className="space-y-4">
+              {entries.map((entry, index) => (
+                <div
+                  key={index}
+                  className="grid grid-cols-1 md:grid-cols-5 gap-4 p-4 bg-gray-50 rounded-lg"
+                >
+                  <Field label="Date">
+                    <Input
+                      type="date"
+                      value={entry.date}
+                      onChange={(e) =>
+                        updateEntry(index, "date", e.target.value)
+                      }
+                    />
+                  </Field>
 
-        <button
-          type="submit"
-          className="bg-blue-500 text-white px-3 py-1 rounded"
-          disabled={saveTimesheet.isPending}
-        >
-          {saveTimesheet.isPending ? "Saving..." : "Save Timesheet"}
-        </button>
-      </form>
+                  <Field label="Start Time">
+                    <Input
+                      type="time"
+                      value={entry.start}
+                      onChange={(e) =>
+                        updateEntry(index, "start", e.target.value)
+                      }
+                    />
+                  </Field>
 
-      {/* Existing Timesheets */}
-      <ul className="space-y-3">
-        {timesheets?.map((t) => (
-          <li key={t.employeeId + t.periodStart} className="border p-3 rounded">
-            <h3 className="font-semibold">
-              {t.employeeId} — {t.periodStart} → {t.periodEnd}
-            </h3>
-            <p>Allowances: {t.allowances ?? 0}</p>
-            <h4 className="font-medium">Entries</h4>
-            <ul className="ml-4 list-disc">
-              {t.entries?.map((en: TimesheetEntry, idx: number) => (
-                <li key={idx}>
-                  {en.date}: {en.start} - {en.end} (Break {en.unpaidBreakMins}m)
-                </li>
+                  <Field label="End Time">
+                    <Input
+                      type="time"
+                      value={entry.end}
+                      onChange={(e) =>
+                        updateEntry(index, "end", e.target.value)
+                      }
+                    />
+                  </Field>
+
+                  <Field label="Break (mins)">
+                    <Input
+                      type="number"
+                      value={entry.unpaidBreakMins}
+                      onChange={(e) =>
+                        updateEntry(
+                          index,
+                          "unpaidBreakMins",
+                          parseInt(e.target.value)
+                        )
+                      }
+                    />
+                  </Field>
+
+                  <div className="flex items-end gap-2">
+                    <div className="flex-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Hours:{" "}
+                        {calculateHours(
+                          entry.start,
+                          entry.end,
+                          entry.unpaidBreakMins
+                        )}
+                      </label>
+                    </div>
+                    {entries.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="danger"
+                        size="sm"
+                        onClick={() => removeEntry(index)}
+                      >
+                        Remove
+                      </Button>
+                    )}
+                  </div>
+                </div>
               ))}
-            </ul>
-          </li>
-        ))}
-      </ul>
+            </div>
+          </div>
+
+          <Field label="Allowances ($)">
+            <Input
+              type="number"
+              step="0.01"
+              value={allowances}
+              onChange={(e) => setAllowances(e.target.value)}
+              placeholder="0.00"
+            />
+          </Field>
+
+          <Button type="submit" disabled={loading || !selectedEmployee}>
+            {loading ? "Saving..." : "Save Timesheet"}
+          </Button>
+        </form>
+      </Card>
     </div>
   );
-}
+};
+
+export default TimesheetsView;
