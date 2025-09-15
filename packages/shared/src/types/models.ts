@@ -19,6 +19,7 @@ export type TimesheetEntry = {
 };
 
 export type Timesheet = {
+  id: string;
   employeeId: string;
   periodStart: string; // ISO date
   periodEnd: string; // ISO date

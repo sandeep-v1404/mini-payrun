@@ -22,12 +22,14 @@
   "dependencies": {
     "@mini-payrun/shared": "workspace:*",
     "@prisma/client": "^6.16.1",
+    "cors": "^2.8.5",
     "eslint-plugin-prettier": "^5.5.4",
     "express": "^5.1.0",
     "typescript-eslint": "^8.43.0",
     "uuid": "^13.0.0"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/jest": "^30.0.0",
     "@types/node": "^24.3.3",

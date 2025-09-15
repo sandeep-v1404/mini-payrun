@@ -1,7 +1,13 @@
 import { Router } from "express";
 import { v4 as uuidv4 } from "uuid";
 import { prisma } from "../db";
-import type { PayrunRequest, Payrun, Payslip } from "@mini-payrun/shared";
+import type {
+  PayrunRequest,
+  Payrun,
+  Payslip,
+  TimesheetEntry,
+  Employee,
+} from "@mini-payrun/shared";
 import { calculatePayslipFromTimesheet } from "../domain/calc";
 
 const router: Router = Router();
@@ -41,11 +47,15 @@ router.post("/", async (req, res) => {
           },
         });
 
-        const entries = ts?.entries ?? [];
+        const entries = (ts?.entries as TimesheetEntry[]) ?? [];
         const allowances = ts?.allowances ?? 0;
 
-        return calculatePayslipFromTimesheet(emp, entries, allowances);
-      }),
+        return calculatePayslipFromTimesheet(
+          emp as Employee,
+          entries,
+          allowances
+        );
+      })
     );
 
     const totals = payslips.reduce(
@@ -56,7 +66,7 @@ router.post("/", async (req, res) => {
         acc.net += p.net;
         return acc;
       },
-      { gross: 0, tax: 0, super: 0, net: 0 },
+      { gross: 0, tax: 0, super: 0, net: 0 }
     );
 
     const payrun: Payrun = {
