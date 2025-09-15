@@ -5,6 +5,7 @@ import Button from "@/components/Button";
 import { Edit3, Plus } from "lucide-react";
 import Field from "@/components/Field";
 import Input from "@/components/Input";
+import Dialog from "@/components/Dialog";
 
 const EmployeesView = ({
   apiClient,
@@ -13,8 +14,9 @@ const EmployeesView = ({
   setLoading,
   loadData,
 }) => {
-  const [showForm, setShowForm] = useState(false);
+  const [showDialog, setShowDialog] = useState(false);
   const [formData, setFormData] = useState({
+    id: "",
     firstName: "",
     lastName: "",
     baseHourlyRate: "",
@@ -28,6 +30,7 @@ const EmployeesView = ({
     setLoading(true);
     try {
       const employeeData = {
+        id: formData.id || "",
         firstName: formData.firstName,
         lastName: formData.lastName,
         type: "hourly",
@@ -35,17 +38,15 @@ const EmployeesView = ({
         superRate: parseFloat(formData.superRate),
         bank:
           formData.bsb && formData.account
-            ? {
-                bsb: formData.bsb,
-                account: formData.account,
-              }
+            ? { bsb: formData.bsb, account: formData.account }
             : undefined,
       };
 
       await apiClient.post("/employees", employeeData);
       await loadData();
-      setShowForm(false);
+      setShowDialog(false);
       setFormData({
+        id: "",
         firstName: "",
         lastName: "",
         baseHourlyRate: "",
@@ -62,6 +63,7 @@ const EmployeesView = ({
 
   return (
     <div className="space-y-8">
+      {/* Add Employee Button */}
       {/* <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Employees</h1>
@@ -73,13 +75,14 @@ const EmployeesView = ({
       </div> */}
 
       <div className="flex justify-end items-center">
-        <Button onClick={() => setShowForm(true)} icon={Plus}>
+        <Button onClick={() => setShowDialog(true)} icon={Plus}>
           Add Employee
         </Button>
       </div>
 
-      {showForm && (
-        <Card title="Add New Employee" className="border-l-4 border-l-blue-500">
+      {/* Dialog Popup */}
+      {showDialog && (
+        <Dialog title="Add New Employee" onClose={() => setShowDialog(false)}>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Field label="First Name" required>
@@ -110,10 +113,7 @@ const EmployeesView = ({
                   step="0.01"
                   value={formData.baseHourlyRate}
                   onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      baseHourlyRate: e.target.value,
-                    })
+                    setFormData({ ...formData, baseHourlyRate: e.target.value })
                   }
                   placeholder="35.00"
                   required
@@ -157,14 +157,19 @@ const EmployeesView = ({
               <Button type="submit" disabled={loading}>
                 {loading ? "Saving..." : "Save Employee"}
               </Button>
-              <Button variant="ghost" onClick={() => setShowForm(false)}>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => setShowDialog(false)}
+              >
                 Cancel
               </Button>
             </div>
           </form>
-        </Card>
+        </Dialog>
       )}
 
+      {/* Employee Table */}
       <Card>
         <Table
           headers={[
@@ -204,7 +209,23 @@ const EmployeesView = ({
                 )}
               </td>
               <td className="px-4 py-4">
-                <Button variant="ghost" size="sm" icon={Edit3}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  icon={Edit3}
+                  onClick={() => {
+                    setFormData({
+                      id: employee.id,
+                      firstName: employee.firstName,
+                      lastName: employee.lastName,
+                      baseHourlyRate: employee.baseHourlyRate.toString(),
+                      superRate: employee.superRate.toString(),
+                      bsb: employee.bank?.bsb || "",
+                      account: employee.bank?.account || "",
+                    });
+                    setShowDialog(true);
+                  }}
+                >
                   Edit
                 </Button>
               </td>

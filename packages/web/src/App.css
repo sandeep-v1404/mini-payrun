@@ -1,0 +1,32 @@
+/* Remove default browser styles */
+input[type="date"],
+input[type="time"] {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-color: white;
+    /* or Tailwind's bg classes */
+    position: relative;
+    color-scheme: light;
+    /* ensures light theme picker */
+}
+
+/* Style the calendar icon (Chrome, Safari, Edge) */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.6;
+    filter: invert(40%) sepia(100%) saturate(500%) hue-rotate(200deg);
+    transition: opacity 0.2s ease-in-out;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover,
+input[type="time"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+}
+
+/* Firefox fix (shows native dropdown icon) */
+input[type="date"]::-moz-focus-inner,
+input[type="time"]::-moz-focus-inner {
+    border: 0;
+}

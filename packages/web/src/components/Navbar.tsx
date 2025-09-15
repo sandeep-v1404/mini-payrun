@@ -1,4 +1,3 @@
-import React from "react";
 import { Calculator } from "lucide-react";
 
 const Navbar = () => {
@@ -10,7 +9,7 @@ const Navbar = () => {
             <Calculator className="w-8 h-8 text-blue-600 mr-3" />
             <div>
               <h1 className="text-xl font-bold text-gray-900">Mini Payrun</h1>
-              <p className="text-sm text-gray-600">Payroll Management System</p>
+              <p className="text-sm text-gray-600">Manage your Payrolls</p>
             </div>
           </div>
           <div className="flex items-center space-x-4">
