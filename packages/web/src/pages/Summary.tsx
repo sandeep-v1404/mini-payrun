@@ -8,6 +8,7 @@ import { useState } from "react";
 import { useEmployees } from "@/api/employees";
 import { usePayruns } from "@/api/payruns";
 import { formatDate } from "@/utils/dayjs";
+import { generatePayslipPDF } from "@/utils/pdf";
 
 // Payruns Summary View
 const SummaryView = () => {
@@ -125,7 +126,9 @@ const SummaryView = () => {
                     </td>
                     <td className="px-4 py-4">
                       <div className="text-sm">
-                        <p>{payslip.normalHours}h regular</p>
+                        <p className="text-black">
+                          {payslip.normalHours}h regular
+                        </p>
                         {payslip.overtimeHours > 0 && (
                           <p className="text-orange-600">
                             {payslip.overtimeHours}h overtime
@@ -146,7 +149,25 @@ const SummaryView = () => {
                       ${payslip.net.toFixed(2)}
                     </td>
                     <td className="px-4 py-4">
-                      <Button variant="outline" size="sm" icon={FileText}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        icon={FileText}
+                        onClick={() => {
+                          const employee = employees.find(
+                            (e) => e.id === payslip.employeeId
+                          );
+                          const employeeName = employee
+                            ? `${employee.firstName} ${employee.lastName}`
+                            : payslip.employeeId;
+
+                          generatePayslipPDF(
+                            selectedPayrun!,
+                            employee!.id!,
+                            employeeName
+                          );
+                        }}
+                      >
                         View Payslip
                       </Button>
                     </td>
