@@ -1,10 +1,15 @@
-import React from "react";
+"use client";
+
 import StatsCard from "@/components/StatsCard";
 import { DollarSign, FileText, TrendingUp, Users } from "lucide-react";
 import Card from "@/components/Card";
+import { useEmployees } from "@/api/employees";
+import { usePayruns } from "@/api/payruns";
 
-// Dashboard View
-const Dashboard = ({ employees, payruns }) => {
+const Dashboard = () => {
+  const { data: employees = [], isLoading: loadingEmployees } = useEmployees();
+  const { data: payruns = [], isLoading: loadingPayruns } = usePayruns();
+
   const totalEmployees = employees.length;
   const lastPayrun = payruns[payruns.length - 1];
   const totalPaid = lastPayrun
@@ -20,42 +25,41 @@ const Dashboard = ({ employees, payruns }) => {
 
   return (
     <div className="space-y-8">
-      {/* <div>
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600 mt-2">Overview of your payroll system</p>
-      </div> */}
-
+      {/* Stats section */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatsCard
           icon={Users}
           label="Total Employees"
-          value={totalEmployees.toString()}
+          value={loadingEmployees ? "..." : totalEmployees.toString()}
           color="blue"
         />
         <StatsCard
           icon={DollarSign}
           label="Last Payrun"
-          value={totalPaid}
+          value={loadingPayruns ? "..." : totalPaid}
           color="green"
         />
         <StatsCard
           icon={TrendingUp}
           label="Avg Hourly Rate"
-          value={avgHourlyRate}
+          value={loadingEmployees ? "..." : avgHourlyRate}
           color="purple"
         />
         <StatsCard
           icon={FileText}
           label="Total Payruns"
-          value={payruns.length.toString()}
+          value={loadingPayruns ? "..." : payruns.length.toString()}
           color="orange"
         />
       </div>
 
+      {/* Recent lists */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <Card title="Recent Employees" subtitle="Latest employee additions">
-          {employees.length > 0 ? (
-            <div className="space-y-3">
+          {loadingEmployees ? (
+            <p className="text-gray-500">Loading employees...</p>
+          ) : employees.length > 0 ? (
+            <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
               {employees.slice(-5).map((emp) => (
                 <div
                   key={emp.id}
@@ -83,8 +87,10 @@ const Dashboard = ({ employees, payruns }) => {
         </Card>
 
         <Card title="Recent Payruns" subtitle="Latest payroll activity">
-          {payruns.length > 0 ? (
-            <div className="space-y-3">
+          {loadingPayruns ? (
+            <p className="text-gray-500">Loading payruns...</p>
+          ) : payruns.length > 0 ? (
+            <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
               {payruns.slice(-5).map((payrun) => (
                 <div
                   key={payrun.id}

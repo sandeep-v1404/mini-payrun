@@ -96,7 +96,7 @@ const EmployeesView = () => {
               icon={Edit3}
               onClick={() => {
                 setFormData({
-                  id: employee.id,
+                  id: employee.id!,
                   firstName: employee.firstName,
                   lastName: employee.lastName,
                   baseHourlyRate: employee.baseHourlyRate.toString(),
@@ -118,7 +118,11 @@ const EmployeesView = () => {
   return (
     <div className="space-y-8">
       {/* Add Employee Button */}
-      <div className="flex justify-end items-center">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Employees</h1>
+          <p className="text-gray-600 mt-2">Manage your employee records</p>
+        </div>
         <Button onClick={() => setShowDialog(true)} icon={Plus}>
           Add Employee
         </Button>

@@ -1,29 +1,34 @@
 import React, { useEffect, useRef, useCallback } from "react";
 
+interface DialogProps {
+  title?: string;
+  children: React.ReactNode;
+  onClose: () => void;
+  width?: string; // e.g. "80%", "600px"
+  height?: string; // e.g. "70%", "500px"
+}
+
 const Dialog = ({
   title,
   children,
   onClose,
-}: {
-  title?: string;
-  children: React.ReactNode;
-  onClose: () => void;
-}) => {
+  width = "80%",
+  height = "80%",
+}: DialogProps) => {
   const dialogRef = useRef<HTMLDivElement>(null);
 
-  // Move focus to the dialog when opened
+  // Focus first input when opened
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog) return;
 
-    // find first focusable element
     const focusable = dialog.querySelector<HTMLElement>(
       'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
     );
     focusable?.focus();
   }, []);
 
-  // Trap focus inside dialog
+  // Trap focus
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -72,10 +77,15 @@ const Dialog = ({
       {/* Dialog content */}
       <div
         ref={dialogRef}
-        className="relative bg-white rounded-xl shadow-lg w-full max-w-lg mx-4 p-6 outline-none"
+        className="relative bg-white rounded-xl shadow-lg outline-none flex flex-col"
+        style={{
+          width,
+          height,
+          maxWidth: "95%",
+          maxHeight: "95%",
+        }}
       >
-        {/* Header */}
-        <div className="flex justify-between items-center border-b pb-3 mb-4">
+        <div className="flex justify-between items-center border-b p-4">
           <h2 id="dialog-title" className="text-lg font-semibold text-gray-900">
             {title}
           </h2>
@@ -87,8 +97,7 @@ const Dialog = ({
           </button>
         </div>
 
-        {/* Body */}
-        <div>{children}</div>
+        <div className="flex-1 overflow-y-auto p-6">{children}</div>
       </div>
     </div>
   );
