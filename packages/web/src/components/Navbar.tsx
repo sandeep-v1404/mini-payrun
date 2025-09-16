@@ -1,4 +1,5 @@
 import { Calculator } from "lucide-react";
+import { now } from "@/utils/dayjs";
 
 const Navbar = () => {
   return (
@@ -14,7 +15,7 @@ const Navbar = () => {
           </div>
           <div className="flex items-center space-x-4">
             <span className="text-sm text-gray-600">
-              {new Date().toLocaleDateString("en-AU")}
+              {now().format("YYYY-MM-DD")}
             </span>
           </div>
         </div>

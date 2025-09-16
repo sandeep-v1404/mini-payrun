@@ -5,6 +5,7 @@ import { DollarSign, FileText, TrendingUp, Users } from "lucide-react";
 import Card from "@/components/Card";
 import { useEmployees } from "@/api/employees";
 import { usePayruns } from "@/api/payruns";
+import { formatDate } from "@/utils/dayjs";
 
 const Dashboard = () => {
   const { data: employees = [], isLoading: loadingEmployees } = useEmployees();
@@ -98,8 +99,8 @@ const Dashboard = () => {
                 >
                   <div>
                     <p className="font-medium text-gray-900">
-                      {new Date(payrun.periodStart).toLocaleDateString()} -{" "}
-                      {new Date(payrun.periodEnd).toLocaleDateString()}
+                      {formatDate(payrun.periodStart)} -{" "}
+                      {formatDate(payrun.periodEnd)}
                     </p>
                     <p className="text-sm text-gray-600">
                       {payrun.payslips.length} employees

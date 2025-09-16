@@ -11,6 +11,7 @@ import Dialog from "@/components/Dialog";
 import { useTimesheets, useUpsertTimesheet } from "@/api/timesheets";
 import { useEmployees } from "@/api/employees";
 import type { Timesheet, TimesheetEntry } from "@mini-payrun/shared";
+import dayjs, { formatDate } from "@/utils/dayjs";
 
 const defaultFormData: Omit<Timesheet, "employee" | "payrun"> = {
   employeeId: "",
@@ -22,8 +23,14 @@ const defaultFormData: Omit<Timesheet, "employee" | "payrun"> = {
 
 const TimesheetsView = () => {
   const { data: timesheets = [], isLoading } = useTimesheets();
-  const { data: employees = [], isLoading: isLoadingEmployees } =
-    useEmployees();
+
+  const {
+    data: employees = [],
+    isLoading: isLoadingEmployees,
+    refetch: refetchEmployees,
+  } = useEmployees({
+    enabled: false,
+  });
   const upsertTimesheet = useUpsertTimesheet();
 
   const [showDialog, setShowDialog] = useState(false);
@@ -55,10 +62,10 @@ const TimesheetsView = () => {
       let nextDate = prev.periodStart;
 
       if (prev.entries.length > 0) {
-        // take last entry's date and increment by 1 day
-        const lastDate = new Date(prev.entries[prev.entries.length - 1].date);
-        lastDate.setDate(lastDate.getDate() + 1);
-        nextDate = lastDate.toISOString().slice(0, 10); // format YYYY-MM-DD
+        const lastDate = dayjs(prev.entries[prev.entries.length - 1].date)
+          .add(1, "day")
+          .format("YYYY-MM-DD");
+        nextDate = lastDate;
       }
 
       return {
@@ -97,9 +104,9 @@ const TimesheetsView = () => {
 
   /** Hours calculator */
   const calculateHours = (start: string, end: string, breakMins: number) => {
-    const s = new Date(`2000-01-01T${start}:00`);
-    const e = new Date(`2000-01-01T${end}:00`);
-    const diff = (e.getTime() - s.getTime()) / 60000 - breakMins;
+    const s = dayjs(`2000-01-01T${start}`);
+    const e = dayjs(`2000-01-01T${end}`);
+    const diff = e.diff(s, "minute") - breakMins;
     return (diff / 60).toFixed(2);
   };
 
@@ -118,8 +125,7 @@ const TimesheetsView = () => {
                 : "Unknown"}
             </td>
             <td className="px-4 py-4 text-gray-900">
-              {new Date(ts.periodStart).toISOString().slice(0, 10)} →{" "}
-              {new Date(ts.periodEnd).toISOString().slice(0, 10)}
+              {formatDate(ts.periodStart)} → {formatDate(ts.periodEnd)} →{" "}
             </td>
             <td className="px-4 py-4 text-gray-900">
               {ts.entries
@@ -170,12 +176,12 @@ const TimesheetsView = () => {
           <h1 className="text-3xl font-bold text-gray-900">Timesheets</h1>
           <p className="text-gray-600 mt-2">Record employee working hours</p>
         </div>
-
         <Button
           icon={Plus}
           onClick={() => {
             resetForm();
             setShowDialog(true);
+            refetchEmployees();
           }}
         >
           Add Timesheet

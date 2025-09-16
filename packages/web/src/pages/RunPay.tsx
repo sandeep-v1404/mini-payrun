@@ -1,5 +1,6 @@
 import type { Payrun } from "@mini-payrun/shared";
 import React, { useState } from "react";
+import { Calculator } from "lucide-react";
 import { useRunPay } from "@/api/payruns";
 import { useEmployees } from "@/api/employees";
 import Card from "@/components/Card";
@@ -7,17 +8,18 @@ import Field from "@/components/Field";
 import Input from "@/components/Input";
 import Button from "@/components/Button";
 import Dialog from "@/components/Dialog";
-import { Calculator } from "lucide-react";
+import { currentWeek } from "@/utils/dayjs";
 
 const RunPay = () => {
-  const [periodStart, setPeriodStart] = useState("2025-08-11");
-  const [periodEnd, setPeriodEnd] = useState("2025-08-17");
+  // Default to current week's Monday → Sunday
+  const [periodStart, setPeriodStart] = useState(currentWeek().start);
+  const [periodEnd, setPeriodEnd] = useState(currentWeek().end);
+
   const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [payrunResult, setPayrunResult] = useState<Payrun | null>(null);
 
-  const { data: employees = [], isLoading, isError } = useEmployees();
-
+  const { data: employees = [], isPending, isError } = useEmployees();
   const runPay = useRunPay();
 
   const handleEmployeeToggle = (employeeId: string) => {
@@ -57,7 +59,7 @@ const RunPay = () => {
     );
   };
 
-  if (isLoading) {
+  if (isPending) {
     return <p>Loading employees...</p>;
   }
 

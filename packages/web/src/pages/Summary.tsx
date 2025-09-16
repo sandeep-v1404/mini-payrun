@@ -7,6 +7,7 @@ import { FileText } from "lucide-react";
 import { useState } from "react";
 import { useEmployees } from "@/api/employees";
 import { usePayruns } from "@/api/payruns";
+import { formatDate } from "@/utils/dayjs";
 
 // Payruns Summary View
 const SummaryView = () => {
@@ -38,8 +39,8 @@ const SummaryView = () => {
                     <div className="flex justify-between items-center">
                       <div>
                         <p className="font-medium text-gray-900">
-                          {new Date(payrun.periodStart).toLocaleDateString()} -{" "}
-                          {new Date(payrun.periodEnd).toLocaleDateString()}
+                          {formatDate(payrun.periodStart)} -{" "}
+                          {formatDate(payrun.periodEnd)}
                         </p>
                         <p className="text-sm text-gray-600">
                           {payrun.payslips.length} employees
@@ -65,11 +66,9 @@ const SummaryView = () => {
       {/* Inline Dialog */}
       {selectedPayrun && (
         <Dialog
-          title={`Payrun Details - ${new Date(
+          title={`Payrun Details - ${formatDate(
             selectedPayrun.periodStart
-          ).toLocaleDateString()} to ${new Date(
-            selectedPayrun.periodEnd
-          ).toLocaleDateString()}`}
+          )} to ${formatDate(selectedPayrun.periodEnd)}`}
           onClose={() => setSelectedPayrun(null)}
           width="80%"
           height="80%"

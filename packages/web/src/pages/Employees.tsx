@@ -6,7 +6,13 @@ import { Edit3, Plus } from "lucide-react";
 import Field from "@/components/Field";
 import Input from "@/components/Input";
 import Dialog from "@/components/Dialog";
-import { useEmployees, useUpsertEmployee } from "@/api/employees";
+import {
+  useCreateEmployee,
+  useDeleteEmployee,
+  useEmployees,
+  useUpdateEmployee,
+} from "@/api/employees";
+import type { Employee } from "@mini-payrun/shared";
 
 const defaultFormData = {
   id: "",
@@ -19,24 +25,29 @@ const defaultFormData = {
 };
 
 const EmployeesView = () => {
-  const { data: employees = [], isLoading } = useEmployees();
-  const upsertEmployee = useUpsertEmployee();
+  const { data: employees = [], isPending } = useEmployees();
+  const createEmployee = useCreateEmployee();
+  const updateEmployee = useUpdateEmployee();
+  const deleteEmployee = useDeleteEmployee();
 
   const [showDialog, setShowDialog] = useState(false);
   const [formData, setFormData] = useState(defaultFormData);
 
-  /** Reset form back to defaults */
+  // State for delete confirmation
+  const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(
+    null
+  );
+
   const resetForm = useCallback(() => {
     setFormData(defaultFormData);
   }, []);
 
-  /** Handle form submission */
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault();
 
       const employeeData = {
-        id: formData.id || "",
+        id: formData.id || undefined,
         firstName: formData.firstName,
         lastName: formData.lastName,
         type: "hourly",
@@ -48,17 +59,25 @@ const EmployeesView = () => {
             : undefined,
       };
 
-      upsertEmployee.mutate(employeeData, {
+      const mutation = formData.id ? updateEmployee : createEmployee;
+
+      mutation.mutate(employeeData, {
         onSuccess: () => {
           setShowDialog(false);
           resetForm();
         },
       });
     },
-    [formData, resetForm, upsertEmployee]
+    [formData, resetForm, createEmployee, updateEmployee]
   );
 
-  /** Pre-compute rows so Table doesn't rebuild unnecessarily */
+  const handleDelete = useCallback(() => {
+    if (!employeeToDelete) return;
+    deleteEmployee.mutate(employeeToDelete.id!, {
+      onSuccess: () => setEmployeeToDelete(null),
+    });
+  }, [deleteEmployee, employeeToDelete]);
+
   const employeeRows = useMemo(
     () =>
       employees.map((employee) => (
@@ -89,7 +108,7 @@ const EmployeesView = () => {
               <span className="text-gray-400">Not provided</span>
             )}
           </td>
-          <td className="px-4 py-4">
+          <td className="px-4 py-4 flex gap-2">
             <Button
               variant="ghost"
               size="sm"
@@ -109,6 +128,13 @@ const EmployeesView = () => {
             >
               Edit
             </Button>
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={() => setEmployeeToDelete(employee)}
+            >
+              Delete
+            </Button>
           </td>
         </tr>
       )),
@@ -123,8 +149,17 @@ const EmployeesView = () => {
           <h1 className="text-3xl font-bold text-gray-900">Employees</h1>
           <p className="text-gray-600 mt-2">Manage your employee records</p>
         </div>
-        <Button onClick={() => setShowDialog(true)} icon={Plus}>
-          Add Employee
+        <Button
+          onClick={() => {
+            resetForm();
+            setShowDialog(true);
+          }}
+          icon={Plus}
+          disabled={createEmployee.isPending || updateEmployee.isPending}
+        >
+          {createEmployee.isPending || updateEmployee.isPending
+            ? "Loading..."
+            : "Add Employee"}
         </Button>
       </div>
 
@@ -135,7 +170,9 @@ const EmployeesView = () => {
           onClose={() => setShowDialog(false)}
         >
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Form Fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* First Name */}
               <Field label="First Name" required>
                 <Input
                   value={formData.firstName}
@@ -144,9 +181,13 @@ const EmployeesView = () => {
                   }
                   placeholder="Enter first name"
                   required
+                  disabled={
+                    createEmployee.isPending || updateEmployee.isPending
+                  }
                 />
               </Field>
 
+              {/* Last Name */}
               <Field label="Last Name" required>
                 <Input
                   value={formData.lastName}
@@ -155,40 +196,46 @@ const EmployeesView = () => {
                   }
                   placeholder="Enter last name"
                   required
+                  disabled={
+                    createEmployee.isPending || updateEmployee.isPending
+                  }
                 />
               </Field>
 
+              {/* Hourly Rate */}
               <Field label="Hourly Rate" required>
                 <Input
                   type="number"
                   step="0.01"
                   value={formData.baseHourlyRate}
                   onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      baseHourlyRate: e.target.value,
-                    })
+                    setFormData({ ...formData, baseHourlyRate: e.target.value })
                   }
                   placeholder="35.00"
                   required
+                  disabled={
+                    createEmployee.isPending || updateEmployee.isPending
+                  }
                 />
               </Field>
 
+              {/* Super Rate */}
               <Field label="Super Rate">
                 <Input
                   type="number"
                   step="0.001"
                   value={formData.superRate}
                   onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      superRate: e.target.value,
-                    })
+                    setFormData({ ...formData, superRate: e.target.value })
                   }
                   placeholder=""
+                  disabled={
+                    createEmployee.isPending || updateEmployee.isPending
+                  }
                 />
               </Field>
 
+              {/* BSB */}
               <Field label="BSB (Optional)">
                 <Input
                   value={formData.bsb}
@@ -196,9 +243,13 @@ const EmployeesView = () => {
                     setFormData({ ...formData, bsb: e.target.value })
                   }
                   placeholder="083-123"
+                  disabled={
+                    createEmployee.isPending || updateEmployee.isPending
+                  }
                 />
               </Field>
 
+              {/* Account */}
               <Field label="Account Number (Optional)">
                 <Input
                   value={formData.account}
@@ -206,13 +257,23 @@ const EmployeesView = () => {
                     setFormData({ ...formData, account: e.target.value })
                   }
                   placeholder="12345678"
+                  disabled={
+                    createEmployee.isPending || updateEmployee.isPending
+                  }
                 />
               </Field>
             </div>
 
             <div className="flex gap-4">
-              <Button type="submit" disabled={upsertEmployee.isPending}>
-                {upsertEmployee.isPending
+              <Button
+                type="submit"
+                disabled={
+                  createEmployee.isPending ||
+                  updateEmployee.isPending ||
+                  deleteEmployee.isPending
+                }
+              >
+                {createEmployee.isPending || updateEmployee.isPending
                   ? "Saving..."
                   : formData.id
                   ? "Update Employee"
@@ -222,6 +283,11 @@ const EmployeesView = () => {
                 type="button"
                 variant="ghost"
                 onClick={() => setShowDialog(false)}
+                disabled={
+                  createEmployee.isPending ||
+                  updateEmployee.isPending ||
+                  deleteEmployee.isPending
+                }
               >
                 Cancel
               </Button>
@@ -232,7 +298,7 @@ const EmployeesView = () => {
 
       {/* Employee Table */}
       <Card>
-        {isLoading ? (
+        {isPending ? (
           <p className="p-4">Loading employees...</p>
         ) : (
           <Table
@@ -248,6 +314,42 @@ const EmployeesView = () => {
           </Table>
         )}
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      {employeeToDelete && (
+        <Dialog
+          title="Confirm Delete"
+          onClose={() => setEmployeeToDelete(null)}
+          width="400px"
+          height="200px"
+        >
+          <div className="flex flex-col justify-between h-full text-black">
+            <p>
+              Are you sure you want to delete{" "}
+              <strong>
+                {employeeToDelete.firstName} {employeeToDelete.lastName}
+              </strong>
+              ?
+            </p>
+            <div className="flex justify-end gap-4 mt-4">
+              <Button
+                variant="ghost"
+                onClick={() => setEmployeeToDelete(null)}
+                disabled={deleteEmployee.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="danger"
+                onClick={handleDelete}
+                disabled={deleteEmployee.isPending}
+              >
+                {deleteEmployee.isPending ? "Deleting..." : "Delete"}
+              </Button>
+            </div>
+          </div>
+        </Dialog>
+      )}
     </div>
   );
 };
