@@ -125,7 +125,7 @@ const TimesheetsView = () => {
                 : "Unknown"}
             </td>
             <td className="px-4 py-4 text-gray-900">
-              {formatDate(ts.periodStart)} → {formatDate(ts.periodEnd)} →{" "}
+              {formatDate(ts.periodStart)} → {formatDate(ts.periodEnd)}
             </td>
             <td className="px-4 py-4 text-gray-900">
               {ts.entries

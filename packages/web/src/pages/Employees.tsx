@@ -19,7 +19,7 @@ const defaultFormData = {
   firstName: "",
   lastName: "",
   baseHourlyRate: "",
-  superRate: "",
+  superRate: "0.115",
   bsb: "",
   account: "",
 };
