@@ -1,57 +1,79 @@
-export type Employee = {
-  id: string;
-  firstName: string;
-  lastName: string;
-  type: string;
-  baseHourlyRate: number;
-  superRate: number;
-  bank?: {
-    bsb?: string;
-    account?: string;
-  };
-};
+// shared/schemas.ts
+import { z } from "zod";
 
-export type TimesheetEntry = {
-  date: string; // ISO date
-  start: string; // "HH:mm"
-  end: string; // "HH:mm"
-  unpaidBreakMins: number;
-};
+export const BankSchema = z.object({
+  bsb: z.string().optional(),
+  account: z.string().optional(),
+});
 
-export type Timesheet = {
-  id: string;
-  employeeId: string;
-  periodStart: string; // ISO date
-  periodEnd: string; // ISO date
-  entries: TimesheetEntry[];
-  allowances?: number;
-};
+export const EmployeeSchema = z.object({
+  id: z.string().optional(),
+  firstName: z.string(),
+  lastName: z.string(),
+  type: z.string(), // e.g., "hourly"
+  baseHourlyRate: z.number(),
+  superRate: z.number(),
+  bank: BankSchema.optional(),
+});
 
-export type PayrunRequest = {
-  periodStart: string;
-  periodEnd: string;
-  employeeIds?: string[];
-};
+export type Employee = z.infer<typeof EmployeeSchema>;
 
-export type Payslip = {
-  employeeId: string;
-  normalHours: number;
-  overtimeHours: number;
-  gross: number;
-  tax: number;
-  super: number;
-  net: number;
-};
+export const TimesheetEntrySchema = z.object({
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be YYYY-MM-DD"),
+  start: z.string().regex(/^\d{2}:\d{2}$/, "Start time must be HH:mm"),
+  end: z.string().regex(/^\d{2}:\d{2}$/, "End time must be HH:mm"),
+  unpaidBreakMins: z.number().int(),
+});
 
-export type Payrun = {
-  id: string;
-  periodStart: string;
-  periodEnd: string;
-  totals: {
-    gross: number;
-    tax: number;
-    super: number;
-    net: number;
-  };
-  payslips: Payslip[];
-};
+export type TimesheetEntry = z.infer<typeof TimesheetEntrySchema>;
+
+export const TimesheetSchema = z.object({
+  id: z.string().optional(),
+  employeeId: z.string(),
+  periodStart: z.string(), // ISO date string
+  periodEnd: z.string(), // ISO date string
+  entries: z.array(TimesheetEntrySchema),
+  allowances: z.number().optional(),
+  employee: EmployeeSchema.optional(), // for include queries
+  payrunId: z.string().optional(),
+});
+
+export type Timesheet = z.infer<typeof TimesheetSchema>;
+
+export const PayslipSchema = z.object({
+  employeeId: z.string(),
+  normalHours: z.number(),
+  overtimeHours: z.number(),
+  gross: z.number(),
+  tax: z.number(),
+  super: z.number(),
+  net: z.number(),
+});
+
+export type Payslip = z.infer<typeof PayslipSchema>;
+
+export const PayrunSchema = z.object({
+  id: z.string().optional(),
+  periodStart: z.string(), // ISO date
+  periodEnd: z.string(), // ISO date
+  totals: z.object({
+    gross: z.number(),
+    tax: z.number(),
+    super: z.number(),
+    net: z.number(),
+  }),
+  payslips: z.array(PayslipSchema),
+  timesheets: z.array(TimesheetSchema).optional(),
+});
+
+export type Payrun = z.infer<typeof PayrunSchema>;
+
+export const PayrunRequestSchema = z.object({
+  periodStart: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be YYYY-MM-DD"),
+  periodEnd: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be YYYY-MM-DD"),
+  employeeIds: z.array(z.string()).optional(),
+});
+
+export type PayrunRequest = z.infer<typeof PayrunRequestSchema>;

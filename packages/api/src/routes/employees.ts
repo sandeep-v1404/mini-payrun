@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { prisma } from "../db";
-import type { Employee } from "@mini-payrun/shared";
+import { ZodError } from "zod";
+import { EmployeeSchema } from "@mini-payrun/shared";
 
 const router: Router = Router();
 
@@ -16,15 +17,12 @@ router.get("/", async (_req, res) => {
 
 // POST /employees → create or upsert employee
 router.post("/", async (req, res) => {
-  const employee: Employee = req.body;
-
-  if (!employee.firstName || !employee.lastName || !employee.type) {
-    return res.status(400).json({ error: "Missing required employee fields" });
-  }
-
   try {
+    // Validate request body
+    const employee = EmployeeSchema.parse(req.body);
+
     const dbEmployee = await prisma.employee.upsert({
-      where: { id: employee.id ?? "" },
+      where: { id: employee.id || "" },
       update: {
         firstName: employee.firstName,
         lastName: employee.lastName,
@@ -45,6 +43,10 @@ router.post("/", async (req, res) => {
     });
     res.status(201).json(dbEmployee);
   } catch (err) {
+    if (err instanceof ZodError) {
+      // Send validation errors
+      return res.status(400).json({ errors: err.issues });
+    }
     res.status(500).json({ error: (err as Error).message });
   }
 });

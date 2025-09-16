@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { prisma } from "../db";
-import type { Timesheet } from "@mini-payrun/shared";
+import { ZodError } from "zod";
+import { TimesheetSchema } from "@mini-payrun/shared";
 
 const router: Router = Router();
 
@@ -18,15 +19,8 @@ router.get("/", async (_req, res) => {
 
 // POST /timesheets → create or replace a timesheet for employee + period
 router.post("/", async (req, res) => {
-  const ts: Timesheet = req.body;
-
-  if (!ts.employeeId || !ts.periodStart || !ts.periodEnd) {
-    return res
-      .status(400)
-      .json({ error: "employeeId, periodStart, periodEnd are required" });
-  }
-
   try {
+    const ts = TimesheetSchema.parse(req.body); // <-- Zod validation
     const timesheet = await prisma.timesheet.upsert({
       where: {
         employeeId_periodStart_periodEnd: {
@@ -50,6 +44,9 @@ router.post("/", async (req, res) => {
 
     res.status(201).json(timesheet);
   } catch (err) {
+    if (err instanceof ZodError) {
+      return res.status(400).json({ errors: err.issues });
+    }
     res.status(500).json({ error: (err as Error).message });
   }
 });

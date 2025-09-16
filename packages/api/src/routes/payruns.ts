@@ -1,12 +1,13 @@
 import { Router } from "express";
 import { v4 as uuidv4 } from "uuid";
 import { prisma } from "../db";
-import type {
-  PayrunRequest,
-  Payrun,
-  Payslip,
-  TimesheetEntry,
-  Employee,
+import { ZodError } from "zod";
+import {
+  type Payrun,
+  type Payslip,
+  type TimesheetEntry,
+  type Employee,
+  PayrunRequestSchema,
 } from "@mini-payrun/shared";
 import { calculatePayslipFromTimesheet } from "../domain/calc";
 
@@ -17,22 +18,15 @@ router.get("/", async (_req, res) => {
   try {
     const payruns = await prisma.payrun.findMany();
     res.json(payruns);
-  } catch (err: any) {
+  } catch (err) {
     res.status(500).json({ error: (err as Error).message });
   }
 });
 
 // POST /payruns → generate a payrun for a period
 router.post("/", async (req, res) => {
-  const body: PayrunRequest = req.body;
-
-  if (!body.periodStart || !body.periodEnd) {
-    return res
-      .status(400)
-      .json({ error: "periodStart and periodEnd are required" });
-  }
-
   try {
+    const body = PayrunRequestSchema.parse(req.body);
     const employees = await prisma.employee.findMany({
       where: body.employeeIds ? { id: { in: body.employeeIds } } : {},
     });
@@ -90,6 +84,9 @@ router.post("/", async (req, res) => {
 
     res.status(201).json(payrun);
   } catch (err) {
+    if (err instanceof ZodError) {
+      return res.status(400).json({ errors: err.issues });
+    }
     res.status(500).json({ error: (err as Error).message });
   }
 });
