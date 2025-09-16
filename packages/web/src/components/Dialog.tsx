@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useCallback } from "react";
 
 const Dialog = ({
   title,
@@ -11,45 +11,53 @@ const Dialog = ({
 }) => {
   const dialogRef = useRef<HTMLDivElement>(null);
 
-  // Trap focus inside dialog
+  // Move focus to the dialog when opened
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog) return;
 
-    // Focus the dialog itself when opened
-    dialog.focus();
+    // find first focusable element
+    const focusable = dialog.querySelector<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    focusable?.focus();
+  }, []);
 
-    const handleKeyDown = (e: KeyboardEvent) => {
+  // Trap focus inside dialog
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
       if (e.key === "Escape") {
+        e.preventDefault();
         onClose();
       }
 
-      if (e.key === "Tab") {
-        const focusableEls = dialog.querySelectorAll<HTMLElement>(
+      if (e.key === "Tab" && dialogRef.current) {
+        const focusableEls = dialogRef.current.querySelectorAll<HTMLElement>(
           'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
         );
-        const first = focusableEls[0];
-        const last = focusableEls[focusableEls.length - 1];
+        const focusable = Array.from(focusableEls);
+        if (focusable.length === 0) return;
 
-        if (e.shiftKey) {
-          // shift + tab
-          if (document.activeElement === first) {
-            e.preventDefault();
-            last.focus();
-          }
-        } else {
-          // tab
-          if (document.activeElement === last) {
-            e.preventDefault();
-            first.focus();
-          }
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        const active = document.activeElement as HTMLElement;
+
+        if (!e.shiftKey && active === last) {
+          e.preventDefault();
+          first.focus();
+        } else if (e.shiftKey && active === first) {
+          e.preventDefault();
+          last.focus();
         }
       }
-    };
+    },
+    [onClose]
+  );
 
+  useEffect(() => {
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [onClose]);
+  }, [handleKeyDown]);
 
   return (
     <div
@@ -65,7 +73,6 @@ const Dialog = ({
       <div
         ref={dialogRef}
         className="relative bg-white rounded-xl shadow-lg w-full max-w-lg mx-4 p-6 outline-none"
-        tabIndex={-1} // make div focusable
       >
         {/* Header */}
         <div className="flex justify-between items-center border-b pb-3 mb-4">
