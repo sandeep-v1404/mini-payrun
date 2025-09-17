@@ -10,6 +10,8 @@ import {
   PayrunRequestSchema,
 } from "@mini-payrun/shared";
 import { calculatePayslipFromTimesheet } from "../domain/calc";
+import { generatePayslipPDF } from "../lib/pdf";
+import { uploadPayslipToS3 } from "../lib/uploadPdf";
 
 const router: Router = Router();
 
@@ -31,6 +33,9 @@ router.post("/", async (req, res) => {
       where: body.employeeIds ? { id: { in: body.employeeIds } } : {},
     });
 
+    // Generate payrun ID early
+    const payrunId = uuidv4();
+
     const payslips: Payslip[] = await Promise.all(
       employees.map(async (emp) => {
         const ts = await prisma.timesheet.findFirst({
@@ -44,14 +49,30 @@ router.post("/", async (req, res) => {
         const entries = (ts?.entries as TimesheetEntry[]) ?? [];
         const allowances = ts?.allowances ?? 0;
 
-        return calculatePayslipFromTimesheet(
+        // Calculate payslip data
+        const payslip = calculatePayslipFromTimesheet(
           emp as Employee,
           entries,
           allowances
         );
+
+        // Generate PDF
+        const doc = generatePayslipPDF(
+          body.periodStart,
+          body.periodEnd,
+          `${emp.firstName} ${emp.lastName}`,
+          payslip
+        );
+        const pdfBuffer = Buffer.from(doc.output("arraybuffer"));
+
+        // Upload to S3
+        const pdfUrl = await uploadPayslipToS3(pdfBuffer, payrunId, emp.id);
+
+        return { ...payslip, pdfUrl, employeeId: emp.id };
       })
     );
 
+    // Compute totals across all payslips
     const totals = payslips.reduce(
       (acc, p) => {
         acc.gross += p.gross;
@@ -64,7 +85,7 @@ router.post("/", async (req, res) => {
     );
 
     const payrun: Payrun = {
-      id: uuidv4(),
+      id: payrunId,
       periodStart: body.periodStart,
       periodEnd: body.periodEnd,
       totals,
@@ -78,7 +99,7 @@ router.post("/", async (req, res) => {
         periodStart: new Date(payrun.periodStart),
         periodEnd: new Date(payrun.periodEnd),
         totals: payrun.totals,
-        payslips: payrun.payslips,
+        payslips: payrun.payslips, // stored as JSON
       },
     });
 

@@ -48,6 +48,7 @@ export const PayslipSchema = z.object({
   tax: z.number(),
   super: z.number(),
   net: z.number(),
+  pdfUrl: z.url().optional(),
 });
 
 export type Payslip = z.infer<typeof PayslipSchema>;

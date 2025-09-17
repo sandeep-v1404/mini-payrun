@@ -4,7 +4,9 @@ import employees from "./routes/employees";
 import timesheets from "./routes/timesheets";
 import payruns from "./routes/payruns";
 import { connectDB } from "./db";
+import dotenv from "dotenv";
 
+dotenv.config();
 const app = express();
 app.use(express.json());
 

@@ -8,13 +8,16 @@ import { useState } from "react";
 import { useEmployees } from "@/api/employees";
 import { usePayruns } from "@/api/payruns";
 import { formatDate } from "@/utils/dayjs";
-import { generatePayslipPDF } from "@/utils/pdf";
 
 // Payruns Summary View
 const SummaryView = () => {
   const { data: payruns = [], isLoading: loadingPayruns } = usePayruns();
   const { data: employees = [], isLoading: loadingEmployees } = useEmployees();
   const [selectedPayrun, setSelectedPayrun] = useState<Payrun | null>(null);
+
+  const openPayslip = (url: string) => {
+    window.open(url, "_blank"); // opens in new tab
+  };
 
   if (loadingPayruns || loadingEmployees) {
     return <p className="text-gray-500">Loading...</p>;
@@ -153,20 +156,7 @@ const SummaryView = () => {
                         variant="outline"
                         size="sm"
                         icon={FileText}
-                        onClick={() => {
-                          const employee = employees.find(
-                            (e) => e.id === payslip.employeeId
-                          );
-                          const employeeName = employee
-                            ? `${employee.firstName} ${employee.lastName}`
-                            : payslip.employeeId;
-
-                          generatePayslipPDF(
-                            selectedPayrun!,
-                            employee!.id!,
-                            employeeName
-                          );
-                        }}
+                        onClick={() => openPayslip(payslip.pdfUrl!)}
                       >
                         View Payslip
                       </Button>
