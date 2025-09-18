@@ -2,11 +2,26 @@ import Card from "@/components/Card";
 import { usePayruns } from "@/api/payruns";
 import { formatDate } from "@/utils/dayjs";
 import { useNavigate } from "react-router-dom";
+import { useEffect, useRef } from "react";
 
 // Payruns Summary View
 const SummaryView = () => {
   const navigate = useNavigate();
-  const { data: payruns = [], isLoading: loadingPayruns } = usePayruns();
+
+  const hasRun = useRef(false);
+
+  const {
+    data: payruns = [],
+    isLoading: loadingPayruns,
+    refetch: refetchPayruns,
+  } = usePayruns();
+
+  useEffect(() => {
+    if (hasRun.current) return;
+    hasRun.current = true;
+
+    refetchPayruns();
+  }, [refetchPayruns]);
 
   if (loadingPayruns) {
     return <p className="text-gray-500">Loading...</p>;
