@@ -20,7 +20,7 @@ const s3 = new S3Client({
 export async function uploadPayslipToS3(
   pdfBuffer: Buffer,
   payrunId: string,
-  employeeId: string
+  employeeId: string,
 ): Promise<string> {
   const key = `payruns/${payrunId}/${employeeId}.pdf`;
 
@@ -31,7 +31,7 @@ export async function uploadPayslipToS3(
       Body: pdfBuffer,
       ContentType: "application/pdf",
       ServerSideEncryption: "AES256",
-    })
+    }),
   );
 
   return `https://${bucketName}.s3.${region}.amazonaws.com/${key}`;

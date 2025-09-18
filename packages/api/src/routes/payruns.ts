@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { v4 as uuidv4 } from "uuid";
-import { prisma } from "../db";
+import { prisma } from "../lib/db";
 import { ZodError } from "zod";
 import {
   type Payrun,
@@ -15,7 +15,7 @@ import { uploadPayslipToS3 } from "../lib/uploadPdf";
 
 const router: Router = Router();
 
-// GET /payruns → list all payruns
+// GET /payruns list all payruns
 router.get("/", async (_req, res) => {
   try {
     const payruns = await prisma.payrun.findMany();
@@ -25,7 +25,7 @@ router.get("/", async (_req, res) => {
   }
 });
 
-// POST /payruns → generate a payrun for a period
+// POST /payruns generate a payrun for a period
 router.post("/", async (req, res) => {
   try {
     const body = PayrunRequestSchema.parse(req.body);
@@ -112,7 +112,7 @@ router.post("/", async (req, res) => {
   }
 });
 
-// GET /payruns/:id → fetch payrun by id (with employees)
+// GET /payruns/:id fetch payrun by id (with employees)
 router.get("/:id", async (req, res) => {
   try {
     const payrun = await prisma.payrun.findUnique({

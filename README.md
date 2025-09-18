@@ -1,6 +1,6 @@
 # Mini Payroll App
 
-A small payroll management system built with **Node.js**, **Express**, **PostgreSQL** +s **Prisma**, and **TypeScript**.  
+A small payroll management system built with **React + Vite**, **Node.js**, **Express**, **PostgreSQL** + **Prisma**, and **TypeScript**.  
 The goal is to keep it simple but still handle the essentials like employees, timesheets, and payruns.
 
 ---
@@ -69,11 +69,24 @@ cd mini-payroll
 pnpm install
 ```
 
-### 3. Set up environment variables
+### 3. Build Types 
 
-Create a `.env` file in the root and update DB password:
+```sh
+pnpm shared:types
+```
 
-``` 
+### 3. Generate Prisma Schema
+
+```sh
+pnpm prisma:generate
+```
+
+
+### 4. Set up environment variables
+
+Create a `.env` file in the root and update variables in env:
+
+```sh
 cp packages/api/.env.example packages/api/.env
 
 ```
@@ -100,10 +113,39 @@ npm test
 
 ## Future Improvements
 
-- Add authentication & role-based access (e.g., admin vs employee)
-- Export payruns as CSV/PDF for reporting
-- Add UI for employees to view and submit timesheets
+- role-based access (e.g., admin vs employee)
+- Add UI for employees to view timesheets
 - Add validations (e.g., overlapping timesheets, allowance caps)
 - Automate payroll calculations (basic salary, overtime, deductions)
 
 ---
+
+
+
+### TODO
+
+Unit tests for tax/super logic & at least one endpoint.
+
+Structured logging; basic error handling.
+
+
+GitHub Actions for lint, typecheck, test
+
+
+Employees: list + add/edit (id, name, rate, super)
+
+
+● Testing:
+○ Unit tests for tax/super/overtime logic (include edge cases around bracket
+cutovers)
+○ 1–2 API tests (happy path + validation error)
+○ (Optional) minimal UI test with Playwright
+
+
+8) Optional AWS Track (bonus)
+● API: Lambda + API Gateway (Node18+), or ECS Fargate
+● Storage: RDS (Postgres) or DynamoDB; or SQLite for local
+● Static UI: S3 + CloudFront
+● IaC: CDK/Terraform/SAM with README deploy steps
+● Observability: CloudWatch logs/metrics; structured JSON; simple /metrics
+endpoint

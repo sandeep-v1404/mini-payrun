@@ -1,15 +1,20 @@
 import { Router } from "express";
-import { prisma } from "../db";
+import { prisma } from "../lib/db";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { z } from "zod";
 import { LoginSchema, SignupSchema } from "@mini-payrun/shared";
 import type { AuthRequest } from "../middleware/auth";
 
+interface TokenInterface {
+  accessToken: string;
+  refreshToken: string;
+}
+
 const router: Router = Router();
 
 // Token generation helper
-const generateTokens = (userId: string, email: string) => {
+const generateTokens = (userId: string, email: string): TokenInterface => {
   const accessToken = jwt.sign(
     { userId, email },
     process.env.JWT_SECRET!,

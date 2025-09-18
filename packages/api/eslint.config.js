@@ -37,7 +37,7 @@ export default defineConfig([
       "no-empty-function": "warn",
 
       // ✅ Style consistency
-      "prettier/prettier": "warn",
+      // "prettier/prettier": "warn",
     },
     ignores: ["dist", "node_modules", "src/generated"],
   },

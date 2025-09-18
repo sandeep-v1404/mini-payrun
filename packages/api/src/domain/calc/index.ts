@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import type { Employee, Payslip, TimesheetEntry } from "@mini-payrun/shared";
 
 function parseHMToMinutes(hm: string): number {

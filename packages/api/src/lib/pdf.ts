@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import type { Payslip } from "@mini-payrun/shared";
@@ -8,7 +7,7 @@ export const generatePayslipPDF = (
   periodStart: string,
   periodEnd: string,
   employeeName: string,
-  payslip: Payslip
+  payslip: Payslip,
 ): jsPDF => {
   const doc = new jsPDF();
 
@@ -18,11 +17,7 @@ export const generatePayslipPDF = (
 
   // Period
   doc.setFontSize(12);
-  doc.text(
-    `Period: ${formatDate(periodStart)} - ${formatDate(periodEnd)}`,
-    14,
-    30
-  );
+  doc.text(`Period: ${formatDate(periodStart)} - ${formatDate(periodEnd)}`, 14, 30);
 
   // Payslip details
   const rows = [

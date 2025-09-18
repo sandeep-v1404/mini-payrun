@@ -1,11 +1,11 @@
 import { Router } from "express";
-import { prisma } from "../db";
+import { prisma } from "../lib/db";
 import { ZodError } from "zod";
 import { EmployeeSchema } from "@mini-payrun/shared";
 
 const router: Router = Router();
 
-// GET /employees → list all employees
+// GET /employees list all employees
 router.get("/", async (_req, res) => {
   try {
     const employees = await prisma.employee.findMany();
@@ -15,7 +15,7 @@ router.get("/", async (_req, res) => {
   }
 });
 
-// POST /employees → create employee
+// POST /employees create employee
 router.post("/", async (req, res) => {
   try {
     const employee = EmployeeSchema.parse(req.body);
@@ -40,7 +40,7 @@ router.post("/", async (req, res) => {
   }
 });
 
-// PUT /employees/:id → update employee
+// PUT /employees/:id update employee
 router.put("/:id", async (req, res) => {
   try {
     const employee = EmployeeSchema.parse({
@@ -68,7 +68,7 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-// DELETE /employees/:id → delete employee
+// DELETE /employees/:id delete employee
 router.delete("/:id", async (req, res) => {
   try {
     const { id } = req.params;

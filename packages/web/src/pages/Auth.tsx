@@ -89,7 +89,7 @@ const Auth = () => {
             className={`flex-1 py-4 px-6 text-center font-medium transition-colors ${
               mode === "login"
                 ? "bg-blue-600 text-white"
-                : "bg-gray-50 text-gray-600 hover:bg-gray-100"
+                : "bg-gray-200 text-gray-600 hover:bg-gray-300"
             }`}
           >
             <div className="flex items-center justify-center gap-2">
@@ -102,7 +102,7 @@ const Auth = () => {
             className={`flex-1 py-4 px-6 text-center font-medium transition-colors ${
               mode === "signup"
                 ? "bg-blue-600 text-white"
-                : "bg-gray-50 text-gray-600 hover:bg-gray-100"
+                : "bg-gray-200 text-gray-600 hover:bg-gray-300"
             }`}
           >
             <div className="flex items-center justify-center gap-2">

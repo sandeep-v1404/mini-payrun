@@ -1,11 +1,11 @@
 import { Router } from "express";
-import { prisma } from "../db";
+import { prisma } from "../lib/db";
 import { ZodError } from "zod";
 import { TimesheetSchema } from "@mini-payrun/shared";
 
 const router: Router = Router();
 
-// GET /timesheets → list all timesheets
+// GET /timesheets list all timesheets
 router.get("/", async (_req, res) => {
   try {
     const timesheets = await prisma.timesheet.findMany({
@@ -17,7 +17,7 @@ router.get("/", async (_req, res) => {
   }
 });
 
-// POST /timesheets → create or replace a timesheet for employee + period
+// POST /timesheets create or replace a timesheet for employee + period
 router.post("/", async (req, res) => {
   try {
     const ts = TimesheetSchema.parse(req.body);

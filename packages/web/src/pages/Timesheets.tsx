@@ -30,14 +30,10 @@ const defaultFormData: Omit<Timesheet, "employee" | "payrun"> = {
 const TimesheetsView = () => {
   const {
     data: timesheets = [],
-    isLoading,
+    isLoading: isLoadingTimesheets,
     refetch: refetchTimesheets,
   } = useTimesheets();
-  const {
-    data: employees = [],
-    isLoading: isLoadingEmployees,
-    refetch: refetchEmployees,
-  } = useEmployees({
+  const { data: employees = [], refetch: refetchEmployees } = useEmployees({
     enabled: false,
   });
   const upsertTimesheet = useUpsertTimesheet();
@@ -413,7 +409,7 @@ const TimesheetsView = () => {
         <Table
           columns={timesheetColumns}
           data={timesheets}
-          isLoading={isLoading}
+          isLoading={isLoadingTimesheets}
           emptyMessage="No timesheets found"
         />
       </Card>
