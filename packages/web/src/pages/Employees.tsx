@@ -1,4 +1,10 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, {
+  useState,
+  useCallback,
+  useMemo,
+  useEffect,
+  useRef,
+} from "react";
 import Card from "@/components/Card";
 import Table, { type TableColumn } from "@/components/Table";
 import Button from "@/components/Button";
@@ -25,7 +31,11 @@ const defaultFormData = {
 };
 
 const EmployeesView = () => {
-  const { data: employees = [], isPending } = useEmployees();
+  const {
+    data: employees = [],
+    isPending,
+    refetch: refetchEmployees,
+  } = useEmployees(); // Assuming refetch is provided
   const createEmployee = useCreateEmployee();
   const updateEmployee = useUpdateEmployee();
   const deleteEmployee = useDeleteEmployee();
@@ -35,6 +45,8 @@ const EmployeesView = () => {
   const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(
     null
   );
+
+  const hasRun = useRef(false);
 
   const resetForm = useCallback(() => {
     setFormData(defaultFormData);
@@ -63,18 +75,22 @@ const EmployeesView = () => {
         onSuccess: () => {
           setShowDialog(false);
           resetForm();
+          refetchEmployees();
         },
       });
     },
-    [formData, resetForm, createEmployee, updateEmployee]
+    [formData, resetForm, createEmployee, updateEmployee, refetchEmployees]
   );
 
   const handleDelete = useCallback(() => {
     if (!employeeToDelete) return;
     deleteEmployee.mutate(employeeToDelete.id!, {
-      onSuccess: () => setEmployeeToDelete(null),
+      onSuccess: () => {
+        setEmployeeToDelete(null);
+        refetchEmployees();
+      },
     });
-  }, [deleteEmployee, employeeToDelete]);
+  }, [deleteEmployee, employeeToDelete, refetchEmployees]);
 
   const handleEditClick = useCallback((employee: Employee) => {
     setFormData({
@@ -128,7 +144,7 @@ const EmployeesView = () => {
         header: "Bank Details",
         render: (bank: Employee["bank"]) =>
           bank ? (
-            <div className="text-sm">
+            <div className="text-sm text-black">
               <p>BSB: {bank.bsb}</p>
               <p>Acc: {bank.account}</p>
             </div>
@@ -162,6 +178,13 @@ const EmployeesView = () => {
     ];
     return columnsArr;
   }, [handleEditClick, handleDeleteClick]);
+
+  useEffect(() => {
+    if (hasRun.current) return;
+    hasRun.current = true;
+
+    refetchEmployees();
+  }, [refetchEmployees]);
 
   return (
     <div className="space-y-8">

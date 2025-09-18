@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
 import Dashboard from "@/pages/Dashboard";
@@ -8,6 +8,7 @@ import RunPay from "@/pages/RunPay";
 import SummaryView from "@/pages/Summary";
 import Auth from "@/pages/Auth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import Payslip from "@/pages/Payslip";
 
 // Create a new Layout component
 function DefaultLayout({ children }: { children: React.ReactNode }) {
@@ -41,7 +42,8 @@ export default function App() {
                   <Route path="/timesheets" element={<Timesheets />} />
                   <Route path="/runpay" element={<RunPay />} />
                   <Route path="/payruns" element={<SummaryView />} />
-                  <Route path="*" element={<Navigate to="/" replace />} />
+                  <Route path="/payruns/:id" element={<Payslip />} />
+                  <Route path="*" element={<div>Not Found</div>} />
                 </Routes>
               </DefaultLayout>
             </ProtectedRoute>

@@ -112,16 +112,43 @@ router.post("/", async (req, res) => {
   }
 });
 
-// GET /payruns/:id → fetch payrun by id
+// GET /payruns/:id → fetch payrun by id (with employees)
 router.get("/:id", async (req, res) => {
   try {
     const payrun = await prisma.payrun.findUnique({
       where: { id: req.params.id },
     });
+
     if (!payrun) {
       return res.status(404).json({ error: "Payrun not found" });
     }
-    res.json(payrun);
+
+    // payslips are stored as JSON in db
+    const payslips = payrun.payslips as any[];
+
+    // Collect unique employeeIds from payslips
+    const employeeIds = [...new Set(payslips.map((p) => p.employeeId))];
+
+    // Fetch employees in one query
+    const employees = await prisma.employee.findMany({
+      where: { id: { in: employeeIds } },
+    });
+
+    // Merge employee info into payslips
+    const enrichedPayslips = payslips.map((p) => {
+      const emp = employees.find((e) => e.id === p.employeeId);
+      return {
+        ...p,
+        employee: emp ?? null, // attach full employee object
+      };
+    });
+
+    const result = {
+      ...payrun,
+      payslips: enrichedPayslips,
+    };
+
+    res.json(result);
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });
   }

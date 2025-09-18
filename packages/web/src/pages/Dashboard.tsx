@@ -6,10 +6,21 @@ import Card from "@/components/Card";
 import { useEmployees } from "@/api/employees";
 import { usePayruns } from "@/api/payruns";
 import { formatDate } from "@/utils/dayjs";
+import { useEffect, useRef } from "react";
 
 const Dashboard = () => {
-  const { data: employees = [], isLoading: loadingEmployees } = useEmployees();
-  const { data: payruns = [], isLoading: loadingPayruns } = usePayruns();
+  const {
+    data: employees = [],
+    isLoading: loadingEmployees,
+    refetch: refetchEmployees,
+  } = useEmployees();
+  const {
+    data: payruns = [],
+    isLoading: loadingPayruns,
+    refetch: refetchPayruns,
+  } = usePayruns();
+
+  const hasRun = useRef(false);
 
   const totalEmployees = employees.length;
   const lastPayrun = payruns[payruns.length - 1];
@@ -23,6 +34,14 @@ const Dashboard = () => {
           employees.length
         ).toFixed(2)}`
       : "$0.00";
+
+  useEffect(() => {
+    if (hasRun.current) return;
+    hasRun.current = true;
+
+    refetchEmployees();
+    refetchPayruns();
+  }, [refetchEmployees, refetchPayruns]);
 
   return (
     <div className="space-y-8">

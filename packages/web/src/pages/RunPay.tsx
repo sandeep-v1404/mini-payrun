@@ -1,5 +1,5 @@
 import type { Payrun } from "@mini-payrun/shared";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Calculator } from "lucide-react";
 import { useRunPay } from "@/api/payruns";
 import { useEmployees } from "@/api/employees";
@@ -19,7 +19,14 @@ const RunPay = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [payrunResult, setPayrunResult] = useState<Payrun | null>(null);
 
-  const { data: employees = [], isPending, isError } = useEmployees();
+  const hasRun = useRef(false);
+
+  const {
+    data: employees = [],
+    isPending,
+    isError,
+    refetch: refetchEmployees,
+  } = useEmployees();
   const runPay = useRunPay();
 
   const handleEmployeeToggle = (employeeId: string) => {
@@ -58,6 +65,13 @@ const RunPay = () => {
       }
     );
   };
+
+  useEffect(() => {
+    if (hasRun.current) return;
+    hasRun.current = true;
+
+    refetchEmployees();
+  }, [refetchEmployees]);
 
   if (isPending) {
     return <p>Loading employees...</p>;

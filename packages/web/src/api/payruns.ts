@@ -25,7 +25,7 @@ export const useRunPay = () => {
 };
 
 // Fetch single payrun
-export const usePayrun = (id: string) =>
+export const usePayrunWithId = (id: string) =>
   useQuery<Payrun>({
     queryKey: ["payruns", id],
     queryFn: async () => {
