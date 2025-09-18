@@ -1,5 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState, useCallback, useMemo } from "react";
+import React, {
+  useState,
+  useCallback,
+  useMemo,
+  useRef,
+  useEffect,
+} from "react";
 import Card from "@/components/Card";
 import Table, { type TableColumn } from "@/components/Table";
 import Button from "@/components/Button";
@@ -22,7 +28,11 @@ const defaultFormData: Omit<Timesheet, "employee" | "payrun"> = {
 };
 
 const TimesheetsView = () => {
-  const { data: timesheets = [], isLoading } = useTimesheets();
+  const {
+    data: timesheets = [],
+    isLoading,
+    refetch: refetchTimesheets,
+  } = useTimesheets();
   const {
     data: employees = [],
     isLoading: isLoadingEmployees,
@@ -35,6 +45,8 @@ const TimesheetsView = () => {
   const [showDialog, setShowDialog] = useState(false);
   const [formData, setFormData] = useState(defaultFormData);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const hasRun = useRef(false);
 
   /** Reset form */
   const resetForm = useCallback(() => {
@@ -197,6 +209,25 @@ const TimesheetsView = () => {
     return columnsArr;
   }, [calculateHours, handleEditClick]);
 
+  const onChangeSelect = useCallback(
+    (id: any) => setFormData((f) => ({ ...f, employeeId: id })),
+    []
+  );
+
+  const searchableEmployeeOptions = useMemo(() => {
+    return employees.map((emp) => ({
+      id: emp.id!,
+      label: `${emp.firstName} ${emp.lastName}`,
+    }));
+  }, [employees]);
+
+  useEffect(() => {
+    if (hasRun.current) return;
+    hasRun.current = true;
+
+    refetchTimesheets();
+  }, [refetchTimesheets]);
+
   return (
     <div className="space-y-8">
       {/* Add Button */}
@@ -232,25 +263,12 @@ const TimesheetsView = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <Field label="Employee" required>
                 <Select
+                  options={searchableEmployeeOptions}
                   required
                   value={formData.employeeId}
-                  onChange={(e) =>
-                    setFormData((f) => ({ ...f, employeeId: e.target.value }))
-                  }
-                >
-                  <option value="">Select employee</option>
-                  {isLoadingEmployees ? (
-                    <option disabled>Loading employees...</option>
-                  ) : (
-                    employees.map((emp) => (
-                      <option key={emp.id} value={emp.id}>
-                        {emp.firstName} {emp.lastName}
-                      </option>
-                    ))
-                  )}
-                </Select>
+                  onChange={onChangeSelect}
+                />
               </Field>
-
               <Field label="Period Start" required>
                 <Input
                   type="date"

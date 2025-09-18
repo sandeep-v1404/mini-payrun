@@ -6,7 +6,7 @@ const navigation = [
   { id: "employees", label: "Employees", icon: Users, path: "/employees" },
   { id: "timesheets", label: "Timesheets", icon: Clock, path: "/timesheets" },
   { id: "runpay", label: "Run Pay", icon: Play, path: "/runpay" },
-  { id: "payruns", label: "Payrun Summary", icon: FileText, path: "/payruns" },
+  { id: "payruns", label: "Payrun History", icon: FileText, path: "/payruns" },
 ];
 
 export default function Sidebar() {
