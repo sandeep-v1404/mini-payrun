@@ -9,11 +9,11 @@ const Navbar = () => {
   const handleLogout = async () => {
     await logoutMutation.mutateAsync(undefined, {
       onSuccess: () => {
-        navigate("/login"); // redirect only after logout success
+        navigate("/auth"); // redirect only after logout success
       },
       onError: () => {
         // Even if logout API fails, clear local state
-        navigate("/login");
+        navigate("/auth");
       },
     });
   };

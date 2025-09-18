@@ -31,7 +31,7 @@ const Auth = () => {
         { email: formData.email, password: formData.password },
         {
           onSuccess: () => {
-            navigate("/dashboard");
+            navigate("/");
           },
           onError: (error: any) => {
             const axiosError = error as import("axios").AxiosError;
@@ -46,7 +46,7 @@ const Auth = () => {
         { email: formData.email, password: formData.password },
         {
           onSuccess: () => {
-            navigate("/dashboard");
+            navigate("/");
           },
           onError: (error) => {
             if (error.message.includes("User already exists")) {
