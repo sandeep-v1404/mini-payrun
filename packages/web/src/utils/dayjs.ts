@@ -13,10 +13,6 @@ const MELBOURNE_TZ = "Australia/Melbourne";
 // set default timezone to Melbourne
 dayjs.tz.setDefault(MELBOURNE_TZ);
 
-export function now() {
-  return dayjs();
-}
-
 export function today() {
   return dayjs();
 }

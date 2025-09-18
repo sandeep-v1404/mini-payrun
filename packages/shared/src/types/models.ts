@@ -1,5 +1,16 @@
-// shared/schemas.ts
 import { z } from "zod";
+
+export const SignupSchema = z.object({
+  email: z.email(),
+  password: z.string().min(6),
+});
+
+export const LoginSchema = z.object({
+  email: z.email(),
+  password: z.string(),
+});
+
+export type User = z.infer<typeof LoginSchema>;
 
 export const BankSchema = z.object({
   bsb: z.string().optional(),
@@ -37,6 +48,33 @@ export const TimesheetSchema = z.object({
   employee: EmployeeSchema.optional(), // for include queries
   payrunId: z.string().optional(),
 });
+
+export const TimesheetSchema2 = z
+  .object({
+    id: z.string().optional(),
+    employeeId: z.string(),
+    periodStart: z.string(),
+    periodEnd: z.string(),
+    entries: z.array(TimesheetEntrySchema),
+    allowances: z.number().optional(),
+    employee: EmployeeSchema.optional(),
+    payrunId: z.string().optional(),
+  })
+  .refine(
+    (data) => {
+      const start = new Date(data.periodStart);
+      const end = new Date(data.periodEnd);
+
+      return data.entries.every((e) => {
+        const d = new Date(e.date);
+        return d >= start && d <= end;
+      });
+    },
+    {
+      message: "All entry dates must be within periodStart and periodEnd",
+      path: ["entries"], // where error will be attached
+    }
+  );
 
 export type Timesheet = z.infer<typeof TimesheetSchema>;
 

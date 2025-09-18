@@ -1,7 +1,23 @@
-import { Calculator } from "lucide-react";
-import { now } from "@/utils/dayjs";
+import { Calculator, LogOut } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useLogout } from "@/api/auth"; // adjust path
 
 const Navbar = () => {
+  const navigate = useNavigate();
+  const logoutMutation = useLogout();
+
+  const handleLogout = async () => {
+    await logoutMutation.mutateAsync(undefined, {
+      onSuccess: () => {
+        navigate("/login"); // redirect only after logout success
+      },
+      onError: () => {
+        // Even if logout API fails, clear local state
+        navigate("/login");
+      },
+    });
+  };
+
   return (
     <header className="bg-white shadow-sm border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -13,10 +29,16 @@ const Navbar = () => {
               <p className="text-sm text-gray-600">Manage your Payrolls</p>
             </div>
           </div>
-          <div className="flex items-center space-x-4">
-            <span className="text-sm text-gray-600">
-              {now().format("YYYY-MM-DD")}
-            </span>
+
+          <div className="flex items-center space-x-6">
+            <button
+              onClick={handleLogout}
+              className="flex items-center cursor-pointer text-sm text-gray-600 hover:text-red-600 transition-colors"
+              disabled={logoutMutation.isPending}
+            >
+              <LogOut className="w-5 h-5 mr-1" />
+              {logoutMutation.isPending ? "Logging out..." : "Logout"}
+            </button>
           </div>
         </div>
       </div>

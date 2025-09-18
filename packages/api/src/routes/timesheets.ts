@@ -20,13 +20,28 @@ router.get("/", async (_req, res) => {
 // POST /timesheets → create or replace a timesheet for employee + period
 router.post("/", async (req, res) => {
   try {
-    const ts = TimesheetSchema.parse(req.body); // <-- Zod validation
+    const ts = TimesheetSchema.parse(req.body);
+
+    const start = new Date(ts.periodStart);
+    const end = new Date(ts.periodEnd);
+
+    const invalidEntry = ts.entries.find((e) => {
+      const d = new Date(e.date);
+      return d < start || d > end;
+    });
+
+    if (invalidEntry) {
+      return res.status(400).json({
+        error: `Entry date ${invalidEntry.date} is outside of period range`,
+      });
+    }
+
     const timesheet = await prisma.timesheet.upsert({
       where: {
         employeeId_periodStart_periodEnd: {
           employeeId: ts.employeeId,
-          periodStart: new Date(ts.periodStart),
-          periodEnd: new Date(ts.periodEnd),
+          periodStart: start,
+          periodEnd: end,
         },
       },
       update: {
@@ -35,8 +50,8 @@ router.post("/", async (req, res) => {
       },
       create: {
         employeeId: ts.employeeId,
-        periodStart: new Date(ts.periodStart),
-        periodEnd: new Date(ts.periodEnd),
+        periodStart: start,
+        periodEnd: end,
         entries: ts.entries,
         allowances: ts.allowances ?? 0,
       },

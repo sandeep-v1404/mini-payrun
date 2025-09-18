@@ -11,7 +11,7 @@ import Dialog from "@/components/Dialog";
 import { useTimesheets, useUpsertTimesheet } from "@/api/timesheets";
 import { useEmployees } from "@/api/employees";
 import type { Timesheet, TimesheetEntry } from "@mini-payrun/shared";
-import dayjs, { formatDate } from "@/utils/dayjs";
+import dayjs, { currentWeek, formatDate } from "@/utils/dayjs";
 
 const defaultFormData: Omit<Timesheet, "employee" | "payrun"> = {
   employeeId: "",
@@ -35,27 +35,35 @@ const TimesheetsView = () => {
 
   const [showDialog, setShowDialog] = useState(false);
   const [formData, setFormData] = useState(defaultFormData);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   /** Reset form */
   const resetForm = useCallback(() => {
     setFormData(defaultFormData);
   }, []);
 
-  /** Handle submit */
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault();
+      setSubmitError(null);
       upsertTimesheet.mutate(formData, {
         onSuccess: () => {
           setShowDialog(false);
           resetForm();
+        },
+        onError: (error: any) => {
+          const message =
+            error?.response?.data?.error ||
+            error?.response?.data?.message ||
+            error.message ||
+            "Failed to save timesheet";
+          setSubmitError(message);
         },
       });
     },
     [formData, resetForm, upsertTimesheet]
   );
 
-  /** Add entry */
   /** Add entry */
   const addEntry = () => {
     setFormData((prev) => {
@@ -150,6 +158,7 @@ const TimesheetsView = () => {
                 icon={Edit3}
                 onClick={() => {
                   setFormData({
+                    id: ts.id,
                     employeeId: ts.employeeId,
                     periodStart: ts.periodStart,
                     periodEnd: ts.periodEnd,
@@ -179,7 +188,12 @@ const TimesheetsView = () => {
         <Button
           icon={Plus}
           onClick={() => {
-            resetForm();
+            const { start, end } = currentWeek();
+            setFormData({
+              ...defaultFormData,
+              periodStart: start,
+              periodEnd: end,
+            });
             setShowDialog(true);
             refetchEmployees();
           }}
@@ -191,17 +205,14 @@ const TimesheetsView = () => {
       {/* Dialog */}
       {showDialog && (
         <Dialog
-          title={
-            formData.employeeId && formData.periodStart && formData.periodEnd
-              ? "Edit Timesheet"
-              : "Add Timesheet"
-          }
+          title={formData.id ? "Edit Timesheet" : "Add Timesheet"}
           onClose={() => setShowDialog(false)}
         >
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <Field label="Employee" required>
                 <Select
+                  required
                   value={formData.employeeId}
                   onChange={(e) =>
                     setFormData((f) => ({ ...f, employeeId: e.target.value }))
@@ -339,6 +350,9 @@ const TimesheetsView = () => {
                 }
               />
             </Field>
+            {submitError && (
+              <p className="text-red-600 text-sm font-medium">{submitError}</p>
+            )}
 
             <div className="flex gap-4">
               <Button type="submit" disabled={upsertTimesheet.isPending}>

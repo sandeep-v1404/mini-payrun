@@ -18,7 +18,7 @@ function round2(n: number): number {
  *  - normalHours = min(totalHours, 38)
  *  - overtimeHours = max(totalHours - 38, 0)
  *  - gross = normalHours*baseRate + overtimeHours*baseRate*1.5 + allowances
- *  - tax = progressive by bracket per period (see assignment)
+ *  - tax = progressive by bracket per period
  *  - super = 11.5% of gross (use employee.superRate if present; fallback 0.115)
  *  - net = gross - tax
  *
@@ -44,7 +44,6 @@ export function calculatePayslipFromTimesheet(
     normalHours * baseRate + overtimeHours * baseRate * 1.5 + allowances;
   const gross = round2(grossRaw);
 
-  // Tax calculation using the brackets exactly as described in assignment.
   // For each bracket, tax is applied to the amount within that bracket.
   let tax = 0;
   const g = gross;

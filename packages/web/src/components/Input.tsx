@@ -30,7 +30,7 @@ const Input = ({
     date: "text-gray-700 cursor-pointer [appearance:none] pr-10",
     time: "text-gray-700 cursor-pointer [appearance:none] pr-10",
     password: "tracking-widest",
-    number: "text-right",
+    number: "text-left",
   };
 
   // Choose icon
@@ -43,7 +43,7 @@ const Input = ({
         (inputRef.current as any).showPicker();
       } else {
         // Fallback → focus input (Safari/Firefox)
-        inputRef.current?.focus();
+        (inputRef.current as any)?.focus();
       }
     }
   };
