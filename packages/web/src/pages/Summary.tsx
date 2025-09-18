@@ -1,10 +1,10 @@
 import Button from "@/components/Button";
 import Card from "@/components/Card";
-import Table from "@/components/Table";
-import Dialog from "@/components/Dialog"; // your reusable dialog
+import Table, { type TableColumn } from "@/components/Table";
+import Dialog from "@/components/Dialog";
 import type { Payrun } from "@mini-payrun/shared";
 import { FileText } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useEmployees } from "@/api/employees";
 import { usePayruns } from "@/api/payruns";
 import { formatDate } from "@/utils/dayjs";
@@ -15,9 +15,92 @@ const SummaryView = () => {
   const { data: employees = [], isLoading: loadingEmployees } = useEmployees();
   const [selectedPayrun, setSelectedPayrun] = useState<Payrun | null>(null);
 
-  const openPayslip = (url: string) => {
-    window.open(url, "_blank"); // opens in new tab
-  };
+  const openPayslip = useCallback((url: string) => {
+    window.open(url, "_blank");
+  }, []);
+
+  // Define columns for the payslips table
+  const payslipColumns: TableColumn[] = useMemo(() => {
+    const columnsArr: TableColumn[] = [
+      {
+        key: "employee",
+        header: "Employee",
+        render: (_, payslip) => {
+          const emp = employees.find((e) => e.id === payslip.employeeId);
+          return (
+            <span className="font-medium text-gray-900">
+              {emp ? `${emp.firstName} ${emp.lastName}` : payslip.employeeId}
+            </span>
+          );
+        },
+      },
+      {
+        key: "hours",
+        header: "Hours",
+        render: (_, payslip) => (
+          <div className="text-sm">
+            <p className="text-black">{payslip.normalHours}h regular</p>
+            {payslip.overtimeHours > 0 && (
+              <p className="text-orange-600">
+                {payslip.overtimeHours}h overtime
+              </p>
+            )}
+          </div>
+        ),
+      },
+      {
+        key: "gross",
+        header: "Gross",
+        render: (value) => (
+          <span className="font-semibold text-green-600">
+            ${value.toFixed(2)}
+          </span>
+        ),
+      },
+      {
+        key: "tax",
+        header: "Tax",
+        render: (value) => (
+          <span className="font-semibold text-red-600">
+            ${value.toFixed(2)}
+          </span>
+        ),
+      },
+      {
+        key: "super",
+        header: "Super",
+        render: (value) => (
+          <span className="font-semibold text-blue-600">
+            ${value.toFixed(2)}
+          </span>
+        ),
+      },
+      {
+        key: "net",
+        header: "Net",
+        render: (value) => (
+          <span className="font-semibold text-gray-900">
+            ${value.toFixed(2)}
+          </span>
+        ),
+      },
+      {
+        key: "actions",
+        header: "Actions",
+        render: (_, payslip) => (
+          <Button
+            variant="outline"
+            size="sm"
+            icon={FileText}
+            onClick={() => openPayslip(payslip.pdfUrl!)}
+          >
+            View Payslip
+          </Button>
+        ),
+      },
+    ];
+    return columnsArr;
+  }, [employees, openPayslip]);
 
   if (loadingPayruns || loadingEmployees) {
     return <p className="text-gray-500">Loading...</p>;
@@ -108,63 +191,10 @@ const SummaryView = () => {
 
             {/* Payslips Table */}
             <Table
-              headers={[
-                "Employee",
-                "Hours",
-                "Gross",
-                "Tax",
-                "Super",
-                "Net",
-                "Actions",
-              ]}
-            >
-              {selectedPayrun.payslips.map((payslip) => {
-                const emp = employees.find((e) => e.id === payslip.employeeId);
-                return (
-                  <tr key={payslip.employeeId} className="hover:bg-gray-50">
-                    <td className="px-4 py-4 font-medium text-gray-900">
-                      {emp
-                        ? `${emp.firstName} ${emp.lastName}`
-                        : payslip.employeeId}
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="text-sm">
-                        <p className="text-black">
-                          {payslip.normalHours}h regular
-                        </p>
-                        {payslip.overtimeHours > 0 && (
-                          <p className="text-orange-600">
-                            {payslip.overtimeHours}h overtime
-                          </p>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 font-semibold text-green-600">
-                      ${payslip.gross.toFixed(2)}
-                    </td>
-                    <td className="px-4 py-4 font-semibold text-red-600">
-                      ${payslip.tax.toFixed(2)}
-                    </td>
-                    <td className="px-4 py-4 font-semibold text-blue-600">
-                      ${payslip.super.toFixed(2)}
-                    </td>
-                    <td className="px-4 py-4 font-semibold text-gray-900">
-                      ${payslip.net.toFixed(2)}
-                    </td>
-                    <td className="px-4 py-4">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        icon={FileText}
-                        onClick={() => openPayslip(payslip.pdfUrl!)}
-                      >
-                        View Payslip
-                      </Button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </Table>
+              columns={payslipColumns}
+              data={selectedPayrun.payslips}
+              emptyMessage="No payslips found"
+            />
           </div>
         </Dialog>
       )}

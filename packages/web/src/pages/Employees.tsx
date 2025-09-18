@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo } from "react";
 import Card from "@/components/Card";
-import Table from "@/components/Table";
+import Table, { type TableColumn } from "@/components/Table";
 import Button from "@/components/Button";
 import { Edit3, Plus } from "lucide-react";
 import Field from "@/components/Field";
@@ -32,8 +32,6 @@ const EmployeesView = () => {
 
   const [showDialog, setShowDialog] = useState(false);
   const [formData, setFormData] = useState(defaultFormData);
-
-  // State for delete confirmation
   const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(
     null
   );
@@ -78,68 +76,92 @@ const EmployeesView = () => {
     });
   }, [deleteEmployee, employeeToDelete]);
 
-  const employeeRows = useMemo(
-    () =>
-      employees.map((employee) => (
-        <tr key={employee.id} className="hover:bg-gray-50">
-          <td className="px-4 py-4">
-            <div>
-              <p className="font-medium text-gray-900">
-                {employee.firstName} {employee.lastName}
-              </p>
-              <p className="text-sm text-gray-600">ID: {employee.id}</p>
+  const handleEditClick = useCallback((employee: Employee) => {
+    setFormData({
+      id: employee.id!,
+      firstName: employee.firstName,
+      lastName: employee.lastName,
+      baseHourlyRate: employee.baseHourlyRate.toString(),
+      superRate: employee.superRate.toString(),
+      bsb: employee.bank?.bsb || "",
+      account: employee.bank?.account || "",
+    });
+    setShowDialog(true);
+  }, []);
+
+  const handleDeleteClick = useCallback((employee: Employee) => {
+    setEmployeeToDelete(employee);
+  }, []);
+
+  const employeeColumns: TableColumn[] = useMemo(() => {
+    const columnsArr: TableColumn[] = [
+      {
+        key: "name",
+        header: "Name",
+        render: (_, employee: Employee) => (
+          <div>
+            <p className="font-medium text-gray-900">
+              {employee.firstName} {employee.lastName}
+            </p>
+            <p className="text-sm text-gray-600">ID: {employee.id}</p>
+          </div>
+        ),
+      },
+      {
+        key: "baseHourlyRate",
+        header: "Hourly Rate",
+        render: (value: number) => (
+          <span className="text-green-600 font-semibold">
+            ${value.toFixed(2)}
+          </span>
+        ),
+      },
+      {
+        key: "superRate",
+        header: "Super Rate",
+        render: (value: number) => (
+          <span className="text-black">{(value * 100).toFixed(1)}%</span>
+        ),
+      },
+      {
+        key: "bank",
+        header: "Bank Details",
+        render: (bank: Employee["bank"]) =>
+          bank ? (
+            <div className="text-sm">
+              <p>BSB: {bank.bsb}</p>
+              <p>Acc: {bank.account}</p>
             </div>
-          </td>
-          <td className="px-4 py-4">
-            <span className="text-green-600 font-semibold">
-              ${employee.baseHourlyRate.toFixed(2)}
-            </span>
-          </td>
-          <td className="px-4 py-4 text-black">
-            {(employee.superRate * 100).toFixed(1)}%
-          </td>
-          <td className="px-4 py-4 text-black">
-            {employee.bank ? (
-              <div className="text-sm">
-                <p>BSB: {employee.bank.bsb}</p>
-                <p>Acc: {employee.bank.account}</p>
-              </div>
-            ) : (
-              <span className="text-gray-400">Not provided</span>
-            )}
-          </td>
-          <td className="px-4 py-4 flex gap-2">
+          ) : (
+            <span className="text-gray-400">Not provided</span>
+          ),
+      },
+      {
+        key: "actions",
+        header: "Actions",
+        render: (_, employee: Employee) => (
+          <div className="flex gap-2">
             <Button
               variant="ghost"
               size="sm"
               icon={Edit3}
-              onClick={() => {
-                setFormData({
-                  id: employee.id!,
-                  firstName: employee.firstName,
-                  lastName: employee.lastName,
-                  baseHourlyRate: employee.baseHourlyRate.toString(),
-                  superRate: employee.superRate.toString(),
-                  bsb: employee.bank?.bsb || "",
-                  account: employee.bank?.account || "",
-                });
-                setShowDialog(true);
-              }}
+              onClick={() => handleEditClick(employee)}
             >
               Edit
             </Button>
             <Button
               variant="danger"
               size="sm"
-              onClick={() => setEmployeeToDelete(employee)}
+              onClick={() => handleDeleteClick(employee)}
             >
               Delete
             </Button>
-          </td>
-        </tr>
-      )),
-    [employees]
-  );
+          </div>
+        ),
+      },
+    ];
+    return columnsArr;
+  }, [handleEditClick, handleDeleteClick]);
 
   return (
     <div className="space-y-8">
@@ -298,21 +320,12 @@ const EmployeesView = () => {
 
       {/* Employee Table */}
       <Card>
-        {isPending ? (
-          <p className="p-4">Loading employees...</p>
-        ) : (
-          <Table
-            headers={[
-              "Name",
-              "Hourly Rate",
-              "Super Rate",
-              "Bank Details",
-              "Actions",
-            ]}
-          >
-            {employeeRows}
-          </Table>
-        )}
+        <Table
+          columns={employeeColumns}
+          data={employees}
+          isLoading={isPending}
+          emptyMessage="No employees found"
+        />
       </Card>
 
       {/* Delete Confirmation Dialog */}

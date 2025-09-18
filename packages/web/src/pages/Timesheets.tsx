@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useCallback, useMemo } from "react";
 import Card from "@/components/Card";
-import Table from "@/components/Table";
+import Table, { type TableColumn } from "@/components/Table";
 import Button from "@/components/Button";
 import { Plus, Edit3 } from "lucide-react";
 import Field from "@/components/Field";
@@ -23,7 +23,6 @@ const defaultFormData: Omit<Timesheet, "employee" | "payrun"> = {
 
 const TimesheetsView = () => {
   const { data: timesheets = [], isLoading } = useTimesheets();
-
   const {
     data: employees = [],
     isLoading: isLoadingEmployees,
@@ -65,7 +64,7 @@ const TimesheetsView = () => {
   );
 
   /** Add entry */
-  const addEntry = () => {
+  const addEntry = useCallback(() => {
     setFormData((prev) => {
       let nextDate = prev.periodStart;
 
@@ -89,93 +88,114 @@ const TimesheetsView = () => {
         ],
       };
     });
-  };
+  }, []);
 
   /** Update entry */
-  const updateEntry = (
-    index: number,
-    field: keyof TimesheetEntry,
-    value: any
-  ) => {
-    const updated = [...formData.entries];
-    updated[index] = { ...updated[index], [field]: value };
-    setFormData((prev) => ({ ...prev, entries: updated }));
-  };
+  const updateEntry = useCallback(
+    (index: number, field: keyof TimesheetEntry, value: any) => {
+      const updated = [...formData.entries];
+      updated[index] = { ...updated[index], [field]: value };
+      setFormData((prev) => ({ ...prev, entries: updated }));
+    },
+    [formData.entries]
+  );
 
   /** Remove entry */
-  const removeEntry = (index: number) => {
+  const removeEntry = useCallback((index: number) => {
     setFormData((prev) => ({
       ...prev,
       entries: prev.entries.filter((_, i) => i !== index),
     }));
-  };
+  }, []);
 
   /** Hours calculator */
-  const calculateHours = (start: string, end: string, breakMins: number) => {
-    const s = dayjs(`2000-01-01T${start}`);
-    const e = dayjs(`2000-01-01T${end}`);
-    const diff = e.diff(s, "minute") - breakMins;
-    return (diff / 60).toFixed(2);
-  };
-
-  /** Precompute rows for the table */
-  const rows = useMemo(
-    () =>
-      timesheets.map((ts) => {
-        return (
-          <tr
-            key={`${ts.employeeId}-${ts.periodStart}-${ts.periodEnd}`}
-            className="hover:bg-gray-50"
-          >
-            <td className="px-4 py-4 text-gray-900">
-              {ts.employee
-                ? `${ts.employee.firstName} ${ts.employee.lastName}`
-                : "Unknown"}
-            </td>
-            <td className="px-4 py-4 text-gray-900">
-              {formatDate(ts.periodStart)} → {formatDate(ts.periodEnd)}
-            </td>
-            <td className="px-4 py-4 text-gray-900">
-              {ts.entries
-                .reduce(
-                  (total, e) =>
-                    total +
-                    parseFloat(
-                      calculateHours(e.start, e.end, e.unpaidBreakMins)
-                    ),
-                  0
-                )
-                .toFixed(2)}{" "}
-              hrs
-            </td>
-            <td className="px-4 py-4 text-gray-900">
-              ${ts?.allowances?.toFixed(2) || ""}
-            </td>
-            <td className="px-4 py-4 ">
-              <Button
-                variant="ghost"
-                size="sm"
-                icon={Edit3}
-                onClick={() => {
-                  setFormData({
-                    id: ts.id,
-                    employeeId: ts.employeeId,
-                    periodStart: ts.periodStart,
-                    periodEnd: ts.periodEnd,
-                    entries: ts.entries,
-                    allowances: ts.allowances ?? 0,
-                  });
-                  setShowDialog(true);
-                }}
-              >
-                Edit
-              </Button>
-            </td>
-          </tr>
-        );
-      }),
-    [timesheets]
+  const calculateHours = useCallback(
+    (start: string, end: string, breakMins: number) => {
+      const s = dayjs(`2000-01-01T${start}`);
+      const e = dayjs(`2000-01-01T${end}`);
+      const diff = e.diff(s, "minute") - breakMins;
+      return (diff / 60).toFixed(2);
+    },
+    []
   );
+
+  // Memoized handler for edit click
+  const handleEditClick = useCallback((timesheet: Timesheet) => {
+    setFormData({
+      id: timesheet.id,
+      employeeId: timesheet.employeeId,
+      periodStart: timesheet.periodStart,
+      periodEnd: timesheet.periodEnd,
+      entries: timesheet.entries,
+      allowances: timesheet.allowances ?? 0,
+    });
+    setShowDialog(true);
+  }, []);
+
+  const timesheetColumns: TableColumn[] = useMemo(() => {
+    const columnsArr: TableColumn[] = [
+      {
+        key: "employee",
+        header: "Employee",
+        render: (_, timesheet: Timesheet) => (
+          <span className="text-gray-900">
+            {timesheet.employee
+              ? `${timesheet.employee.firstName} ${timesheet.employee.lastName}`
+              : "Unknown"}
+          </span>
+        ),
+      },
+      {
+        key: "period",
+        header: "Period",
+        render: (_, timesheet: Timesheet) => (
+          <span className="text-gray-900">
+            {formatDate(timesheet.periodStart)} →{" "}
+            {formatDate(timesheet.periodEnd)}
+          </span>
+        ),
+      },
+      {
+        key: "totalHours",
+        header: "Total Hours",
+        render: (_, timesheet: Timesheet) => (
+          <span className="text-gray-900">
+            {timesheet.entries
+              .reduce(
+                (total: number, e: TimesheetEntry) =>
+                  total +
+                  parseFloat(calculateHours(e.start, e.end, e.unpaidBreakMins)),
+                0
+              )
+              .toFixed(2)}{" "}
+            hrs
+          </span>
+        ),
+      },
+      {
+        key: "allowances",
+        header: "Allowances",
+        render: (value: number) => (
+          <span className="text-gray-900">${value?.toFixed(2) || "0.00"}</span>
+        ),
+      },
+      {
+        key: "actions",
+        header: "Actions",
+        render: (_, timesheet: Timesheet) => (
+          <Button
+            variant="ghost"
+            size="sm"
+            icon={Edit3}
+            onClick={() => handleEditClick(timesheet)}
+          >
+            Edit
+          </Button>
+        ),
+      },
+    ];
+    return columnsArr;
+  }, [calculateHours, handleEditClick]);
 
   return (
     <div className="space-y-8">
@@ -372,21 +392,12 @@ const TimesheetsView = () => {
 
       {/* Timesheets Table */}
       <Card>
-        {isLoading ? (
-          <p className="p-4">Loading timesheets...</p>
-        ) : (
-          <Table
-            headers={[
-              "Employee",
-              "Period",
-              "Total Hours",
-              "Allowances",
-              "Actions",
-            ]}
-          >
-            {rows}
-          </Table>
-        )}
+        <Table
+          columns={timesheetColumns}
+          data={timesheets}
+          isLoading={isLoading}
+          emptyMessage="No timesheets found"
+        />
       </Card>
     </div>
   );
