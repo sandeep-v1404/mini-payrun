@@ -223,6 +223,7 @@ const EmployeesView = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Field label="Employee Code">
                 <Input
+                  disabled={formData.id ? true : false}
                   value={formData.employeeCode}
                   onChange={(e) =>
                     setFormData({
@@ -279,7 +280,7 @@ const EmployeesView = () => {
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      baseHourlyRate: sanitizeInput(e.target.value),
+                      baseHourlyRate: e.target.value,
                     })
                   }
                   placeholder="35.00"
@@ -299,13 +300,11 @@ const EmployeesView = () => {
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      superRate: sanitizeInput(e.target.value),
+                      superRate: e.target.value,
                     })
                   }
                   placeholder=""
-                  disabled={
-                    createEmployee.isPending || updateEmployee.isPending
-                  }
+                  disabled={true}
                 />
               </Field>
 

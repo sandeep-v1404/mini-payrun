@@ -1,6 +1,13 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Payrun } from "@mini-payrun/shared";
-import React, { useEffect, useRef, useState } from "react";
-import { Calculator } from "lucide-react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { Calculator, Users, X } from "lucide-react";
 import { useRunPay } from "@/api/payruns";
 import { useEmployees } from "@/api/employees";
 import Card from "@/components/Card";
@@ -9,7 +16,30 @@ import Input from "@/components/Input";
 import Button from "@/components/Button";
 import Dialog from "@/components/Dialog";
 import { currentWeek } from "@/utils/dayjs";
+import SelectableTable from "@/components/SelectedTable";
 
+interface EmployeeBadgeProps {
+  employee: any;
+  onRemove: (id: string) => void;
+}
+
+const EmployeeBadge: React.FC<EmployeeBadgeProps> = ({
+  employee,
+  onRemove,
+}) => (
+  <div className="inline-flex items-center bg-blue-100 text-blue-800 rounded-full px-3 py-1 text-sm font-medium mr-2 mb-2">
+    {employee.firstName} {employee.lastName}
+    <button
+      type="button"
+      onClick={() => onRemove(employee.id)}
+      className="ml-1 text-blue-600 hover:text-blue-800 focus:outline-none"
+    >
+      <X size={14} />
+    </button>
+  </div>
+);
+
+// Main RunPay component
 const RunPay = () => {
   // Default to current week's Monday → Sunday
   const [periodStart, setPeriodStart] = useState(currentWeek().start);
@@ -17,6 +47,7 @@ const RunPay = () => {
 
   const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
   const [openDialog, setOpenDialog] = useState(false);
+  const [openEmpDialog, setOpenEmpDialog] = useState(false);
   const [payrunResult, setPayrunResult] = useState<Payrun | null>(null);
 
   const hasRun = useRef(false);
@@ -29,12 +60,8 @@ const RunPay = () => {
   } = useEmployees();
   const runPay = useRunPay();
 
-  const handleEmployeeToggle = (employeeId: string) => {
-    setSelectedEmployees((prev) =>
-      prev.includes(employeeId)
-        ? prev.filter((id) => id !== employeeId)
-        : [...prev, employeeId]
-    );
+  const handleRemoveEmployee = (employeeId: string) => {
+    setSelectedEmployees((prev) => prev.filter((id) => id !== employeeId));
   };
 
   const handleSelectAll = () => {
@@ -47,6 +74,10 @@ const RunPay = () => {
 
   const handleRunPayrun = (e: React.FormEvent) => {
     e.preventDefault();
+    if (selectedEmployees.length === 0) {
+      return;
+    }
+
     runPay.mutate(
       {
         periodStart,
@@ -65,6 +96,24 @@ const RunPay = () => {
       }
     );
   };
+
+  const cancelSelection = useCallback(() => {
+    setSelectedEmployees([]);
+    setOpenEmpDialog(false);
+  }, []);
+
+  const closeDialog = useCallback(() => {
+    setOpenEmpDialog(false);
+  }, []);
+
+  const onSelectionChange = useCallback((selected: string[]) => {
+    setSelectedEmployees(selected);
+  }, []);
+
+  const selectedEmployeeObjects = useMemo(
+    () => employees.filter((emp) => selectedEmployees.includes(emp.id!)),
+    [employees, selectedEmployees]
+  );
 
   useEffect(() => {
     if (hasRun.current) return;
@@ -109,8 +158,45 @@ const RunPay = () => {
               </Field>
             </div>
 
-            <Field label="Select Employees">
+            <Field label="Employees">
               <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <Users size={18} className="text-gray-500 mr-2" />
+                    <span className="text-sm font-medium text-gray-700">
+                      Selected Employees ({selectedEmployees.length})
+                    </span>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => setOpenEmpDialog(true)}
+                  >
+                    {selectedEmployees.length > 0
+                      ? "Edit Selection"
+                      : "Select Employees"}
+                  </Button>
+                </div>
+
+                {selectedEmployees.length > 0 ? (
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="flex flex-wrap">
+                      {selectedEmployeeObjects.map((employee) => (
+                        <EmployeeBadge
+                          key={employee.id}
+                          employee={employee}
+                          onRemove={handleRemoveEmployee}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-gray-50 rounded-lg p-4 text-center text-gray-500">
+                    No employees selected yet
+                  </div>
+                )}
+
                 <div className="flex items-center">
                   <input
                     type="checkbox"
@@ -126,41 +212,47 @@ const RunPay = () => {
                     htmlFor="select-all"
                     className="ml-2 text-sm font-medium text-gray-700"
                   >
-                    Select All ({employees.length})
+                    Select All Employees ({employees.length})
                   </label>
-                </div>
-
-                <div className="space-y-2 max-h-48 overflow-y-auto">
-                  {employees.map((emp) => (
-                    <div key={emp.id} className="flex items-center">
-                      <input
-                        type="checkbox"
-                        id={emp.id}
-                        checked={selectedEmployees.includes(emp.id!)}
-                        onChange={() => handleEmployeeToggle(emp.id!)}
-                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                      />
-                      <label
-                        htmlFor={emp.id}
-                        className="ml-2 text-sm text-gray-700"
-                      >
-                        {emp.firstName} {emp.lastName} (${emp.baseHourlyRate}
-                        /hr)
-                      </label>
-                    </div>
-                  ))}
                 </div>
               </div>
             </Field>
 
-            <Button type="submit" disabled={runPay.isPending} icon={Calculator}>
+            <Button
+              type="submit"
+              disabled={runPay.isPending || selectedEmployees.length === 0}
+              icon={Calculator}
+            >
               {runPay.isPending ? "Processing..." : "Run Payrun"}
             </Button>
           </form>
         </Card>
       </div>
 
-      {/* Dialog for showing results */}
+      {openEmpDialog && (
+        <Dialog title="Select Employees" onClose={cancelSelection} width="90%">
+          <SelectableTable
+            selected={selectedEmployees}
+            columns={[
+              { key: "employeeCode", header: "Employee ID" },
+              { key: "firstName", header: "First Name" },
+              { key: "lastName", header: "Last Name" },
+              { key: "department", header: "Department" },
+            ]}
+            data={employees}
+            onSelectionChange={onSelectionChange}
+          />
+          <div className="mt-6 flex justify-end space-x-3">
+            <Button type="button" variant="secondary" onClick={cancelSelection}>
+              Cancel
+            </Button>
+            <Button type="button" onClick={closeDialog}>
+              Confirm Selection
+            </Button>
+          </div>
+        </Dialog>
+      )}
+
       {payrunResult && openDialog && (
         <Dialog
           title="Payrun Results"

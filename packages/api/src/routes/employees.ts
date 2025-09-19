@@ -22,9 +22,28 @@ router.post("/", async (req, res) => {
 
     // Auto-generate employeeCode if not provided
     let employeeCode = employee.employeeCode;
+
     if (!employeeCode) {
-      const count = await prisma.employee.count();
-      employeeCode = `EMP${String(count + 1).padStart(3, "0")}`; // EMP001, EMP002...
+      const lastEmployee = await prisma.employee.findFirst({
+        where: {
+          employeeCode: {
+            startsWith: "EMP",
+          },
+        },
+        orderBy: { employeeCode: "desc" },
+        select: { employeeCode: true },
+      });
+
+      if (lastEmployee?.employeeCode) {
+        // Extract the number part, e.g. "EMP007" -> 7
+        const match = lastEmployee.employeeCode.match(/^EMP(\d+)$/);
+        const lastNumber = match ? parseInt(match[1], 10) : 0;
+
+        const nextNumber = lastNumber + 1;
+        employeeCode = `EMP${String(nextNumber).padStart(3, "0")}`;
+      } else {
+        employeeCode = "EMP001";
+      }
     }
 
     const dbEmployee = await prisma.employee.create({
