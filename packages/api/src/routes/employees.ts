@@ -2,6 +2,7 @@ import { Router } from "express";
 import { prisma } from "../lib/db";
 import { ZodError } from "zod";
 import { EmployeeSchema } from "@mini-payrun/shared";
+import { Prisma } from "../generated/prisma";
 
 const router: Router = Router();
 
@@ -62,6 +63,16 @@ router.post("/", async (req, res) => {
   } catch (err) {
     if (err instanceof ZodError) {
       return res.status(400).json({ errors: err.issues });
+    }
+
+    // Prisma unique constraint violation
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2002"
+    ) {
+      return res.status(400).json({
+        error: "Employee code already exists. Please use a different code.",
+      });
     }
     res.status(500).json({ error: (err as Error).message });
   }

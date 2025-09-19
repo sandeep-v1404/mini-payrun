@@ -47,6 +47,7 @@ const EmployeesView = () => {
   const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(
     null
   );
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const hasRun = useRef(false);
 
@@ -78,7 +79,17 @@ const EmployeesView = () => {
         onSuccess: () => {
           setShowDialog(false);
           resetForm();
+          setErrorMessage(null); // clear error
           refetchEmployees();
+        },
+        onError: (err: any) => {
+          // If API sends { error: "...message..." }
+          const msg =
+            err?.response?.data?.error ||
+            err?.response?.data?.errors?.[0]?.message ||
+            err.message ||
+            "Something went wrong";
+          setErrorMessage(msg);
         },
       });
     },
@@ -342,6 +353,12 @@ const EmployeesView = () => {
                 />
               </Field>
             </div>
+
+            {errorMessage && (
+              <div className="p-3 rounded-md bg-red-100 text-red-700 text-sm">
+                {errorMessage}
+              </div>
+            )}
 
             <div className="flex gap-4">
               <Button
