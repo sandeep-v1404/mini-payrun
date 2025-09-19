@@ -45,6 +45,7 @@ The goal is to keep it simple but still handle the essentials like employees, ti
 * **Language**: TypeScript
 * **Testing**: Jest + Supertest
 * **Frontend**: React + Vite + TailwindCSS + Tanstack React Query
+* **API Testing**: Postman (collection included)  
 
 ---
 
@@ -161,6 +162,16 @@ Run all API tests:
 ```sh
 pnpm api:test
 ```
+
+---
+
+## API Testing with Postman
+
+A ready-to-use **Postman collection** is included in the repo:
+
+* File: `postman/mini-payroll.postman_collection.json`  
+* Import this file into [Postman](https://www.postman.com/) to test the API endpoints directly.  
+* Make sure to update environment variables (`ACCESS_TOKEN`) and check that **Bearer Auth** is set in Postman before sending requests.  
 
 ---
 

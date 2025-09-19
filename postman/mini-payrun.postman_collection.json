@@ -1,0 +1,232 @@
+{
+	"info": {
+		"_postman_id": "a97c01e2-8558-4374-ad74-904bde6bb0fa",
+		"name": "mini-payrun",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "11780683"
+	},
+	"item": [
+		{
+			"name": "Health",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:4000/health",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "4000",
+					"path": [
+						"health"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Post Timesheets",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"employeeId\": \"e-bob\",\n    \"periodStart\": \"2025-08-11\",\n    \"periodEnd\": \"2025-08-17\",\n    \"entries\": [\n        {\n            \"date\": \"2025-08-11\",\n            \"start\": \"08:00\",\n            \"end\": \"18:00\",\n            \"unpaidBreakMins\": 60\n        },\n        {\n            \"date\": \"2025-08-12\",\n            \"start\": \"08:00\",\n            \"end\": \"18:00\",\n            \"unpaidBreakMins\": 60\n        },\n        {\n            \"date\": \"2025-08-13\",\n            \"start\": \"08:00\",\n            \"end\": \"18:00\",\n            \"unpaidBreakMins\": 60\n        },\n        {\n            \"date\": \"2025-08-14\",\n            \"start\": \"08:00\",\n            \"end\": \"18:00\",\n            \"unpaidBreakMins\": 60\n        },\n        {\n            \"date\": \"2025-08-15\",\n            \"start\": \"08:00\",\n            \"end\": \"18:00\",\n            \"unpaidBreakMins\": 60\n        }\n    ],\n    \"allowances\": 0.0\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:4000/timesheets",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "4000",
+					"path": [
+						"timesheets"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Payruns",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:4000/payruns",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "4000",
+					"path": [
+						"payruns"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Post Payrun",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"periodStart\": \"2025-08-11\",\n    \"periodEnd\": \"2025-08-17\"\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:4000/payruns",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "4000",
+					"path": [
+						"payruns"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Employees ",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:4000/employees",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "4000",
+					"path": [
+						"employees"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Post Employees ",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{AUTH_TOKEN}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{ \n \"employeeCode\": \"EMP001\",\n \"firstName\": \"Bob\",\n \"lastName\": \"Singh\", \n \"type\": \"hourly\", \n \"baseHourlyRate\": 48.0, \n \"superRate\": 0.115, \n \"bank\": { \"bsb\": \"062-000\", \"account\": \"98765432\" } \n } \n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:4000/employees",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "4000",
+					"path": [
+						"employees"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Signup",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n \"email\":\"demo@example.com\",\n \"password\":\"demo123\"   \n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:4000/auth/signup",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "4000",
+					"path": [
+						"auth",
+						"signup"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
