@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useRef } from "react";
+import React, { useMemo, useRef } from "react";
 import { Calendar, Clock } from "lucide-react";
+import dayjs from "dayjs";
 
 const Input = ({
   type = "text",
@@ -13,7 +14,7 @@ const Input = ({
 }: {
   type?: string;
   placeholder?: string;
-  value: any;
+  value: any; // string | Date
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   required?: boolean;
   className?: string;
@@ -38,15 +39,22 @@ const Input = ({
 
   const handleIconClick = () => {
     if (inputRef.current) {
-      // Modern browsers (Chrome, Edge) support this
       if ("showPicker" in inputRef.current) {
         (inputRef.current as any).showPicker();
       } else {
-        // Fallback → focus input (Safari/Firefox)
         (inputRef.current as any)?.focus();
       }
     }
   };
+
+  // Format date value correctly if type="date"
+  const formattedValue = useMemo(
+    () =>
+      type === "date" && value
+        ? dayjs(value).format("YYYY-MM-DD")
+        : value ?? "",
+    [type, value]
+  );
 
   return (
     <div className="relative w-full">
@@ -54,7 +62,7 @@ const Input = ({
         ref={inputRef}
         type={type}
         placeholder={placeholder}
-        value={value}
+        value={formattedValue}
         onChange={onChange}
         required={required}
         className={`${baseClasses} ${typeStyles[type] || ""} ${className}`}

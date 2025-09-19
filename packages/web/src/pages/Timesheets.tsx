@@ -129,6 +129,7 @@ const TimesheetsView = () => {
 
   // Memoized handler for edit click
   const handleEditClick = useCallback((timesheet: Timesheet) => {
+    console.log("first", timesheet);
     setFormData({
       id: timesheet.id,
       employeeId: timesheet.employeeId,
@@ -138,6 +139,11 @@ const TimesheetsView = () => {
       allowances: timesheet.allowances ?? 0,
     });
     setShowDialog(true);
+  }, []);
+
+  const onCancelPress = useCallback(() => {
+    setShowDialog(false);
+    setSubmitError("");
   }, []);
 
   const timesheetColumns: TableColumn[] = useMemo(() => {
@@ -273,7 +279,7 @@ const TimesheetsView = () => {
               <Field label="Period Start" required>
                 <Input
                   type="date"
-                  value={formData.periodStart}
+                  value={dayjs(formData.periodStart).toISOString()}
                   onChange={(e) =>
                     setFormData((f) => ({ ...f, periodStart: e.target.value }))
                   }
@@ -295,7 +301,9 @@ const TimesheetsView = () => {
 
             <div>
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold">Time Entries</h3>
+                <h3 className="text-lg font-semibold text-black">
+                  Time Entries
+                </h3>
                 <Button
                   type="button"
                   size="sm"
@@ -397,11 +405,7 @@ const TimesheetsView = () => {
               <Button type="submit" disabled={upsertTimesheet.isPending}>
                 {upsertTimesheet.isPending ? "Saving..." : "Save Timesheet"}
               </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => setShowDialog(false)}
-              >
+              <Button type="button" variant="ghost" onClick={onCancelPress}>
                 Cancel
               </Button>
             </div>
