@@ -15,17 +15,15 @@ const router: Router = Router();
 
 // Token generation helper
 const generateTokens = (userId: string, email: string): TokenInterface => {
-  const accessToken = jwt.sign(
-    { userId, email },
-    process.env.JWT_SECRET!,
-    { expiresIn: "1h" } // Shorter expiration for access token
-  );
+  const accessToken = jwt.sign({ userId, email }, process.env.JWT_SECRET!, {
+    expiresIn:
+      (process.env.JWT_ACCESS_EXPIRY as jwt.SignOptions["expiresIn"]) || "1h",
+  });
 
-  const refreshToken = jwt.sign(
-    { userId },
-    process.env.JWT_REFRESH_SECRET!,
-    { expiresIn: "7d" } // Longer expiration for refresh token
-  );
+  const refreshToken = jwt.sign({ userId }, process.env.JWT_REFRESH_SECRET!, {
+    expiresIn:
+      (process.env.JWT_REFRESH_EXPIRY as jwt.SignOptions["expiresIn"]) || "7d",
+  });
 
   return { accessToken, refreshToken };
 };

@@ -315,7 +315,6 @@ const EmployeesView = () => {
                     })
                   }
                   placeholder=""
-                  disabled={true}
                 />
               </Field>
 
