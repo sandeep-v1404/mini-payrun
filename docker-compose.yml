@@ -1,0 +1,21 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: packages/api/Dockerfile
+    container_name: mini-payrun-api
+    ports:
+      - "4000:4000"
+    env_file:
+      - packages/api/.env
+    depends_on: []
+
+  web:
+    build:
+      context: .
+      dockerfile: packages/web/Dockerfile
+    container_name: mini-payrun-web
+    ports:
+      - "5173:5173"
+    # env_file:
+    #   - .env
