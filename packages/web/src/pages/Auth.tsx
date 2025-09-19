@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useLogin, useSignup } from "@/api/auth";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Mail, Lock, UserPlus, LogIn } from "lucide-react";
+import { sanitizeInput } from "@/utils/validator";
 
 type AuthMode = "login" | "signup";
 
@@ -62,7 +63,7 @@ const Auth = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: sanitizeInput(value) }));
 
     // Clear error when user starts typing
     if (errors[name]) {

@@ -20,8 +20,16 @@ router.post("/", async (req, res) => {
   try {
     const employee = EmployeeSchema.parse(req.body);
 
+    // Auto-generate employeeCode if not provided
+    let employeeCode = employee.employeeCode;
+    if (!employeeCode) {
+      const count = await prisma.employee.count();
+      employeeCode = `EMP${String(count + 1).padStart(3, "0")}`; // EMP001, EMP002...
+    }
+
     const dbEmployee = await prisma.employee.create({
       data: {
+        employeeCode,
         firstName: employee.firstName,
         lastName: employee.lastName,
         type: employee.type,

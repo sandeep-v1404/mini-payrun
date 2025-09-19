@@ -146,11 +146,16 @@ const TimesheetsView = () => {
         key: "employee",
         header: "Employee",
         render: (_, timesheet: Timesheet) => (
-          <span className="text-gray-900">
-            {timesheet.employee
-              ? `${timesheet.employee.firstName} ${timesheet.employee.lastName}`
-              : "Unknown"}
-          </span>
+          <div>
+            <p className="font-medium text-gray-900">
+              {timesheet.employee
+                ? `${timesheet.employee?.firstName} ${timesheet.employee?.lastName}`
+                : "Unknown"}
+            </p>
+            <p className="text-sm text-gray-600">
+              ID: {timesheet.employee?.employeeCode || ""}
+            </p>
+          </div>
         ),
       },
       {
@@ -213,7 +218,7 @@ const TimesheetsView = () => {
   const searchableEmployeeOptions = useMemo(() => {
     return employees.map((emp) => ({
       id: emp.id!,
-      label: `${emp.firstName} ${emp.lastName}`,
+      label: `${emp.firstName} ${emp.lastName} - ${emp.employeeCode}`,
     }));
   }, [employees]);
 

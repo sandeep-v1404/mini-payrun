@@ -112,9 +112,11 @@ const Table: React.FC<TableProps> = ({
                     : "text-left"
                 }`}
               >
-                {column.render
-                  ? column.render(row[column.key], row)
-                  : row[column.key]}
+                {column.render ? (
+                  column.render(row[column.key], row)
+                ) : (
+                  <p className="text-black">{row[column.key]}</p>
+                )}
               </td>
             ))}
           </tr>

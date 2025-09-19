@@ -156,7 +156,7 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
             <input
               ref={inputRef}
               type="text"
-              className="outline-none w-full bg-transparent"
+              className="outline-none w-full bg-transparent text-black"
               placeholder={placeholder}
               value={search}
               onChange={handleInputChange}

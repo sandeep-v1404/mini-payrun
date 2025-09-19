@@ -19,6 +19,7 @@ export const BankSchema = z.object({
 
 export const EmployeeSchema = z.object({
   id: z.string().optional(),
+  employeeCode: z.string().optional(),
   firstName: z.string(),
   lastName: z.string(),
   type: z.string(), // e.g., "hourly"
