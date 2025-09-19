@@ -34,7 +34,7 @@ const Table: React.FC<TableProps> = ({
           {columns.map((column) => (
             <th
               key={column.key}
-              className={`px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider ${
+              className={`px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider bg-white sticky top-0 z-10 ${
                 column.align === "center"
                   ? "text-center"
                   : column.align === "right"
@@ -124,13 +124,14 @@ const Table: React.FC<TableProps> = ({
       </tbody>
     );
   }, [isLoading, data, columns, emptyMessage, onRowClick, handleRowClick]);
-
   return (
     <div className={`overflow-x-auto ${className}`}>
-      <table className="min-w-full">
-        {renderTableHeaders()}
-        {renderTableBody()}
-      </table>
+      <div className="max-h-80 overflow-y-auto">
+        <table className="min-w-full border-collapse">
+          {renderTableHeaders()}
+          {renderTableBody()}
+        </table>
+      </div>
     </div>
   );
 };

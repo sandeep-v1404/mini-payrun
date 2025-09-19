@@ -237,7 +237,6 @@ const RunPay = () => {
               { key: "employeeCode", header: "Employee ID" },
               { key: "firstName", header: "First Name" },
               { key: "lastName", header: "Last Name" },
-              { key: "department", header: "Department" },
             ]}
             data={employees}
             onSelectionChange={onSelectionChange}

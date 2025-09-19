@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useMemo, useRef } from "react";
-import { Calendar, Clock } from "lucide-react";
 import dayjs from "dayjs";
 
 const Input = ({
@@ -28,23 +27,10 @@ const Input = ({
   // Type-specific styles
   const typeStyles: Record<string, string> = {
     text: "text-black placeholder-gray-400",
-    date: "text-gray-700 cursor-pointer [appearance:none] pr-10",
-    time: "text-gray-700 cursor-pointer [appearance:none] pr-10",
+    date: "text-gray-700 cursor-pointer [appearance:none] ",
+    time: "text-gray-700 cursor-pointer [appearance:none] ",
     password: "tracking-widest",
     number: "text-left",
-  };
-
-  // Choose icon
-  const Icon = type === "date" ? Calendar : type === "time" ? Clock : null;
-
-  const handleIconClick = () => {
-    if (inputRef.current) {
-      if ("showPicker" in inputRef.current) {
-        (inputRef.current as any).showPicker();
-      } else {
-        (inputRef.current as any)?.focus();
-      }
-    }
   };
 
   // Format date value correctly if type="date"
@@ -68,13 +54,6 @@ const Input = ({
         className={`${baseClasses} ${typeStyles[type] || ""} ${className}`}
         {...rest}
       />
-      {Icon && (
-        <Icon
-          size={18}
-          onClick={handleIconClick}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer"
-        />
-      )}
     </div>
   );
 };
